@@ -21,7 +21,7 @@ from collections import defaultdict
 import ir_measures
 from ir_measures import MRR, Recall, nDCG
 
-from api.corpus import load_corpus
+from api.corpus import company_text, load_corpus
 from api.fusion import FusionRetriever
 from api.lexical import LexicalRetriever
 from api.ranking import Retriever
@@ -54,7 +54,7 @@ def build_run(
     run: dict[str, dict[str, float]] = {}
     for qidx in query_indices:
         qid = str(companies[qidx]["id"])
-        query_text = companies[qidx].get("long_description") or companies[qidx].get("one_liner") or ""
+        query_text = company_text(companies[qidx])
         ranked = retriever.rank(query_text, exclude_index=qidx)[:RUN_DEPTH]
         run[qid] = {str(companies[didx]["id"]): score for didx, score in ranked}
     return run

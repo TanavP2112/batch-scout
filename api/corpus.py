@@ -13,9 +13,12 @@ SNAPSHOT_PATH = DATA_DIR / "yc-snapshot-2026-08-22.json"
 
 def company_text(company: dict) -> str:
     """The blob embedded for dense retrieval: description, falling back to one-liner."""
-    return (company.get("long_description") or company.get("one_liner") or "").strip()
+    long_description = (company.get("long_description") or "").strip()
+    if long_description:
+        return long_description
+    return (company.get("one_liner") or "").strip()
 
 
-def load_corpus(path: pathlib.Path = SNAPSHOT_PATH) -> list[dict]:
-    companies = json.loads(path.read_text())
+def load_corpus(path: pathlib.Path | str = SNAPSHOT_PATH) -> list[dict]:
+    companies = json.loads(pathlib.Path(path).read_text())
     return [c for c in companies if company_text(c)]
