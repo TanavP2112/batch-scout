@@ -66,13 +66,32 @@ statistics, never as a per-company grid column or an interpretive verdict.
 
 ## Build/test commands
 
-(To be filled in as they're added — expected: `pytest eval/`,
-`python -m eval.ablate`, `python -m pipeline.refresh --dry-run`,
-`docker build . && docker run -p 8000:8000`.)
+Setup: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
+
+- `python -m eval.leave_one_out` — dense-retrieval eval, 300 sampled queries, `bge-small`. Flags: `--n`, `--model {bge-small,bge-large}`, `--full` (every company as a query), `--seed`.
+- `python -m pipeline.refresh --dry-run` — verify the live snapshot source still fetches.
+
+Not yet added: `pytest eval/`, `python -m eval.ablate` (full ablation table), Dockerfile.
 
 ## Status
 
-Scaffolding in progress. Done so far: `CONTEXT.md` glossary,
-`data/yc-snapshot-2026-08-22.json` (pinned, 6,189 companies),
-`pipeline/refresh.py`. Not yet started: retrieval, facet extraction,
-alignment/whitespace logic, eval harness, API, frontend.
+Build-order step 2 done: dense-only retrieval (`api/corpus.py`, `api/retrieval.py`)
+plus the leave-one-out harness (`eval/leave_one_out.py`). First number, `bge-small`,
+300 sampled queries, weak labels = same `subindustry`:
+
+- nDCG@10: 0.247
+- MRR: 0.449
+- Recall@10: 0.024
+
+Recall@10 reads low in isolation but is not a retrieval failure — it's the
+noisy-weak-label effect the plan's Q6 tradeoff table anticipated. Subindustry
+groups range from 18 to 629 companies (median 73), so Recall@10 is capped near
+10/73 ≈ 0.14 for a *perfect* retriever on a typical query, and near 10/629 ≈
+0.016 for anything landing in the huge "B2B" bucket — checked against the
+actual group-size distribution, not assumed. nDCG@10 and MRR are the fairer
+reads since they aren't penalized the same way by group size. Qualitative
+spot-check (Airbnb → FlightCar/Tab/Hipmunk; Coinbase → Bitstack/Coin/Bitaccess;
+DoorDash → Heyfood/Cache) confirms the embeddings are finding real competitors.
+
+Not yet started: BM25 + RRF fusion, facet extraction, alignment/whitespace
+logic, golden set, LLM-judge, API, frontend.
