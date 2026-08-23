@@ -22,6 +22,9 @@ import ir_measures
 from ir_measures import MRR, Recall, nDCG
 
 from api.corpus import load_corpus
+from api.fusion import FusionRetriever
+from api.lexical import LexicalRetriever
+from api.ranking import Retriever
 from api.retrieval import DenseRetriever
 
 RUN_DEPTH = 100  # candidates kept per query; enough for Recall@10/nDCG@10/MRR
@@ -46,7 +49,7 @@ def build_qrels(companies: list[dict], query_indices: list[int]) -> dict[str, di
 
 
 def build_run(
-    retriever: DenseRetriever, companies: list[dict], query_indices: list[int]
+    retriever: Retriever, companies: list[dict], query_indices: list[int]
 ) -> dict[str, dict[str, float]]:
     run: dict[str, dict[str, float]] = {}
     for qidx in query_indices:
@@ -63,6 +66,12 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--model", default="bge-small", choices=["bge-small", "bge-large"])
     parser.add_argument("--full", action="store_true", help="use every company as a query")
+    parser.add_argument(
+        "--method",
+        default="dense",
+        choices=["dense", "lexical", "fusion"],
+        help="dense-only, BM25-only, or RRF fusion of both",
+    )
     args = parser.parse_args()
 
     companies = load_corpus()
@@ -75,14 +84,22 @@ def main() -> None:
         query_indices = rng.sample(range(len(companies)), min(args.n, len(companies)))
     print(f"queries: {len(query_indices)} (seed={args.seed})")
 
-    retriever = DenseRetriever(companies, model_key=args.model)
+    if args.method == "dense":
+        retriever = DenseRetriever(companies, model_key=args.model)
+    elif args.method == "lexical":
+        retriever = LexicalRetriever(companies)
+    else:
+        dense = DenseRetriever(companies, model_key=args.model)
+        lexical = LexicalRetriever(companies)
+        retriever = FusionRetriever(dense, lexical)
+
     qrels = build_qrels(companies, query_indices)
     run = build_run(retriever, companies, query_indices)
 
     metrics = [nDCG @ 10, Recall @ 10, MRR]
     results = ir_measures.calc_aggregate(metrics, qrels, run)
 
-    print(f"\nmodel={args.model}  method=leave-one-out (weak labels: same subindustry)")
+    print(f"\nmodel={args.model}  method={args.method} (weak labels: same subindustry)")
     for metric, value in results.items():
         print(f"  {metric}: {value:.4f}")
 

@@ -68,7 +68,7 @@ statistics, never as a per-company grid column or an interpretive verdict.
 
 Setup: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
 
-- `python -m eval.leave_one_out` — dense-retrieval eval, 300 sampled queries, `bge-small`. Flags: `--n`, `--model {bge-small,bge-large}`, `--full` (every company as a query), `--seed`.
+- `python -m eval.leave_one_out` — retrieval eval, 300 sampled queries, `bge-small`. Flags: `--n`, `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion}`, `--full` (every company as a query), `--seed`.
 - `python -m pipeline.refresh --dry-run` — verify the live snapshot source still fetches.
 
 Not yet added: `pytest eval/`, `python -m eval.ablate` (full ablation table), Dockerfile.
@@ -93,5 +93,20 @@ reads since they aren't penalized the same way by group size. Qualitative
 spot-check (Airbnb → FlightCar/Tab/Hipmunk; Coinbase → Bitstack/Coin/Bitaccess;
 DoorDash → Heyfood/Cache) confirms the embeddings are finding real competitors.
 
-Not yet started: BM25 + RRF fusion, facet extraction, alignment/whitespace
-logic, golden set, LLM-judge, API, frontend.
+Build-order step 3 done: BM25 lexical retrieval (`api/lexical.py`, via
+`rank-bm25`, already pinned in requirements.txt) plus RRF fusion
+(`api/fusion.py`, k=60, standard Cormack et al. constant) combining dense and
+lexical ranks by reciprocal rank rather than raw score, since BM25 scores and
+cosine similarities aren't on comparable scales. `eval.leave_one_out` now
+takes `--method {dense,lexical,fusion}`. Same 300-query harness, `bge-small`:
+
+- dense:   nDCG@10 0.247 | MRR 0.449 | Recall@10 0.024
+- lexical: nDCG@10 0.223 | MRR 0.401 | Recall@10 0.020
+- fusion:  nDCG@10 0.275 | MRR 0.460 | Recall@10 0.026
+
+Fusion beats dense-only on all three metrics — lexical alone is weaker, but
+it catches sharp keyword/name overlaps dense embeddings blur past, so
+combining ranks (not scores) nets a gain rather than diluting the signal.
+
+Not yet started: facet extraction, alignment/whitespace logic, golden set,
+LLM-judge, API, frontend.

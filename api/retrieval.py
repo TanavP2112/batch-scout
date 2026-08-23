@@ -4,9 +4,8 @@ Embeddings are open-weights and run locally (sentence-transformers) — no
 embedding API, no key. Cached to disk under data/embeddings/ since encoding
 6,189 companies is a one-time cost that should never repeat at query time.
 
-BM25 and RRF fusion are later build-order steps; this module is
-intentionally dense-only for now (see plan: "build dense-only first and
-measure it, then earn each subsequent stage with numbers").
+See api/lexical.py for the BM25 counterpart and api/fusion.py for the RRF
+combination of the two.
 """
 
 import pathlib
@@ -15,6 +14,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from api.corpus import company_text
+from api.ranking import rank_from_scores
 
 DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 EMBEDDINGS_DIR = DATA_DIR / "embeddings"
@@ -65,17 +65,9 @@ class DenseRetriever:
         return embeddings
 
     def rank(self, query_text: str, exclude_index: int | None = None) -> list[tuple[int, float]]:
-        """Returns (corpus_index, score) pairs sorted by descending relevance.
-
-        `exclude_index` masks one corpus entry out of the results — used by
-        the leave-one-out harness so a company never retrieves itself.
-        """
+        """Returns (corpus_index, score) pairs sorted by descending relevance."""
         query_vec = self.model.encode(
             QUERY_INSTRUCTION + query_text, normalize_embeddings=True
         )
         scores = self.embeddings @ query_vec
-        if exclude_index is not None:
-            scores = scores.copy()
-            scores[exclude_index] = -np.inf
-        order = np.argsort(-scores)
-        return [(int(i), float(scores[i])) for i in order]
+        return rank_from_scores(scores, exclude_index)
