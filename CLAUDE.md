@@ -70,6 +70,10 @@ Setup: `python3 -m venv .venv && source .venv/bin/activate && pip install -r req
 
 - `python -m eval.leave_one_out` — retrieval eval, 300 sampled queries, `bge-small`. Flags: `--n`, `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion}`, `--full` (every company as a query), `--seed`.
 - `python -m pipeline.refresh --dry-run` — verify the live snapshot source still fetches.
+- `python -m pipeline.extract_facets submit [--n N]` then `python -m pipeline.extract_facets poll [--watch] [batch_id]` — submits/collects the facet-extraction Batch job. Requires `ANTHROPIC_API_KEY`; costs real money (measured $0.10 for a 20-company sample, so ≈$30 projected for the full ~6,132-company corpus — in line with the plan's ~$27 estimate) and is not run in CI. `--watch` polls every 30s instead of a single check.
+- `python -m pipeline.cluster_problems [--k 40]` — clusters `data/facets_raw.json`'s normalized `problem` labels into the bottom-up `problem` enum (naming clusters by embedding medoid, locally — no API key needed) and writes committed `data/facets.json`. Requires `data/facets_raw.json` to already exist.
+- `python -m eval.golden_set` — retrieval eval against `data/golden_set.json`'s 30 hand-labeled founder-voice ideas. Flags: `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion}` (default `fusion`). No API key needed — local embeddings only.
+- `python -m eval.llm_judge submit` then `python -m eval.llm_judge poll [--watch] [batch_id]` — judges the fusion retriever's golden-set top-10 (300 pairs) for relevance via a Batches job (`claude-sonnet-5`). Requires `ANTHROPIC_API_KEY`; not run in CI.
 
 Not yet added: `pytest eval/`, `python -m eval.ablate` (full ablation table), Dockerfile.
 
@@ -108,5 +112,148 @@ Fusion beats dense-only on all three metrics — lexical alone is weaker, but
 it catches sharp keyword/name overlaps dense embeddings blur past, so
 combining ranks (not scores) nets a gain rather than diluting the signal.
 
-Not yet started: facet extraction, alignment/whitespace logic, golden set,
-LLM-judge, API, frontend.
+Build-order step 4 done: facet extraction pipeline, run against the full
+corpus. `api/facets.py` holds the five-facet schema — controlled enums for
+`customer`/`mechanism`/`wedge`/`business_model` (hand-authored per the plan)
+plus a structured-output JSON schema built from them. `problem` deliberately
+has no enum in that schema; `pipeline/extract_facets.py` submits/polls a
+Message Batches job (`claude-opus-5`, structured outputs) that returns both
+a short 3-6 word normalized `problem` label (`value`) and a longer free-text
+supporting quote (`span`) per company, alongside the four enum values.
+`pipeline/cluster_problems.py` embeds the normalized `value` labels
+(`bge-small`), k-means clusters them, and names each cluster after its
+**medoid** — the member label closest to the cluster's embedding centroid,
+computed locally with plain numpy, no LLM call — then merges the result
+into committed `data/facets.json`. This is the bottom-up derivation the plan
+calls for, so a hand-authored problem taxonomy never has to be guessed
+upfront, and (after an initial version used a Claude call to name clusters)
+it now needs zero API calls at all — cost-conscious per user request. Both
+scripts split into pure, unit-tested functions (request building,
+batch-result parsing, medoid/slugify naming, label merging) and thin I/O
+wrappers, so the logic is tested without hitting any API.
+`pipeline.extract_facets poll --watch` polls the batch every 30s until it
+ends rather than requiring a manual rerun.
+
+A 20-company sample batch ran clean first (measured cost $0.10; enum values
+and `problem` labels spot-checked as well-grounded in the source text), then
+the full 6,132-company batch ran clean too: 6,132/6,132 succeeded, 0 errors,
+written to `data/facets_raw.json`.
+
+Enum revision pass (the plan's rule: flag any value that swallows >30% of
+the corpus): `wedge=novel-capability` (56.8%) and
+`business_model=subscription` (51.2%) both cross the threshold.
+**Decision: accept as-is, do not split.** Spot-checking the spans behind
+each shows this isn't a taxonomy failure — `novel-capability` is correctly
+catching everything that isn't cheaper/faster/unbundling/regulatory-
+arbitrage/distribution-hack (AI-agent products, deep-tech, novel
+data/hardware capabilities all genuinely belong there), and `subscription`
+dominance reflects that the YC corpus itself is SaaS/AI-heavy, not a
+mislabeling. Splitting either would mean inventing sub-categories not
+grounded in a real gap and re-spending ~$27 on a re-run for a taxonomy
+change that wouldn't sharpen the alignment grid.
+
+`pipeline.cluster_problems` ran clean against the medoid-naming rewrite:
+40 clusters, clean readable labels (`clinical-documentation-automation`,
+`runtime-infrastructure-for-ai-agents`, `on-demand-food-delivery`, sizes
+71-291, no dominant outlier), zero API cost. `data/facets.json` is written —
+**build-order step 4 is fully done.** (Earlier attempt hit the org's API
+usage limit on the cluster-naming call before the local-naming rewrite;
+moot now, but the underlying limit — resets 2026-09-01 00:00 UTC — still
+applies to any other Claude call, e.g. `eval.llm_judge`.) Along the way,
+caught and fixed a real bug: the first working version clustered on
+`problem.span` (the long free-text supporting quote) instead of
+`problem.value` (the short normalized label `extract_facets`'s prompt
+produces specifically for downstream clustering) — the symptom was
+run-on, sentence-fragment cluster names instead of clean short ones.
+
+Build-order step 5 done: alignment grid (`api/alignment.py`) and whitespace
+arithmetic (`api/whitespace.py`), both built test-first (red→green, one seam
+at a time — see the `tdd` skill). `build_alignment_grid(idea_facets,
+company_facets)` returns per-facet `{idea_value, company_value, same}` for
+display; `find_whitespace(cohort_facets, facet_name, enum_values)` returns
+enum values with zero occupants across a retrieved cohort, in the caller's
+enum order. Both are pure functions over facet dicts — no dependency on
+`data/facets.json` actually existing yet, so they're fully tested against
+synthetic fixtures ahead of the real extraction run.
+
+Build-order step 7 (golden set) done: `data/golden_set.json` — 30 hand-labeled
+founder-voice ideas (deliberately messy paragraphs, not YC's polished
+marketing copy, per the plan's distribution-mismatch fix), each with
+manually-judged `relevant_company_ids` against the real corpus. Candidates
+were pooled from both dense and lexical top-25 (reduces bias toward
+whichever method the pool came from) and hand-judged by reading the actual
+company descriptions. 7 of the 30 ideas have zero relevant companies —
+a legitimate "no real prior art in this corpus" label, not a labeling gap.
+`eval/golden_set.py` mirrors `eval/leave_one_out.py`'s `build_qrels`/
+`build_run` shape (query text is `idea_text` directly; no `exclude_index`
+since the idea isn't a corpus row), tested per the `tdd` skill. Results,
+`bge-small`:
+
+- dense:   nDCG@10 0.343 | RR 0.374 | R@10 0.494
+- lexical: nDCG@10 0.320 | RR 0.351 | R@10 0.431
+- fusion:  nDCG@10 0.448 | RR 0.413 | R@10 0.639
+
+Fusion wins on all three metrics again, consistent with the leave-one-out
+result — corroborating evidence from an independently-labeled, distribution-
+matched eval set rather than a repeat of the same weak-label story.
+
+LLM-judge (coverage check) scaffolded, not yet run: `eval/llm_judge.py`
+submits/polls a Batches job (`claude-sonnet-5` — cheaper than Opus 5 per
+token, appropriate for a classification task; see decision below —
+structured output `{relevant: bool, reason: str}`) judging the fusion
+retriever's golden-set top-10 per idea (300 pairs total — confirmed locally,
+no API needed to build the pairs). `coverage_report` flags judged-relevant
+pairs absent from `eval.golden_set`'s qrels — the whole point of running a
+judge alongside hand labels, since those are the candidate false negatives
+a small single-labeler golden set is expected to miss. Blocked on the same
+org API usage limit as `pipeline.cluster_problems` (resets 2026-09-01
+00:00 UTC) — not run against the real API yet.
+
+**Decision (2026-08-23): stay on Claude, not open-weights.** Considered
+swapping `llm_judge` (and, briefly, the not-yet-built query-time facet
+extraction path) to a local open-weights model over cost concerns. Priced
+both: query-time facet extraction on `claude-sonnet-5` runs ~$0.003-0.009
+per typed idea (2,200-6,700 queries/month before threatening a $20/month
+budget, before the plan's own hash-cache/rate-limit protections even
+kick in), and the full 300-pair `llm_judge` batch runs ~$0.30-1.20
+depending on model. Neither was ever a dollar-cost problem — both blocked
+calls hit the org's usage *quota*, not a price ceiling, and no model swap
+fixes a quota. Rejected local inference because: (1) it would introduce
+classifier drift between corpus-side facets (Claude-labeled) and
+query-time facets (differently-labeled), corrupting the alignment grid's
+same/different comparisons: the two sides of every comparison need a
+consistent classifier; (2) a weaker, unvalidated judge undermines the one
+thing `llm_judge` exists to do — catch subtle false negatives the
+automatic metrics miss; (3) hosting a 7-8B local model in the deployed
+container shifts cost to hosting/latency, which likely nets out worse than
+a sub-cent Claude call. Fine-tuning was floated and dropped — no real
+training dataset exists (the 300 golden-set pairs are needed for
+*evaluating* a judge, not training one).
+
+`pipeline/extract_facets.py` and `eval/llm_judge.py` share a batch-job
+module, `api/anthropic_batch.py` (submit/poll/watch/parse/collect), instead
+of each hand-rolling the same Message Batches lifecycle. This fixed a real
+bug caught in review: the two hand-copied versions had drifted, and
+`eval.llm_judge`'s `poll` didn't actually support `--watch` despite its own
+docstring claiming it did. `build_judge_pairs` also dropped a redundant
+re-sort — `eval.golden_set.build_run`'s dict is already in rank order by
+construction (dict insertion order + already-sorted input), so re-deriving
+that order was dead work hiding an undocumented cross-module contract.
+
+`api/fusion.py` also gained `build_retriever(companies, method, model_key="bge-small") -> Retriever`,
+replacing the dense/lexical/fusion construction branch that had been
+copy-pasted three times across `eval/leave_one_out.py`, `eval/golden_set.py`,
+and `eval/llm_judge.py` — it now owns the shared-companies invariant
+`FusionRetriever`'s docstring warns about (dense and lexical must be built
+over the same list) as a single constructor instead of three comments.
+Re-running `eval.golden_set --method fusion` after the rewire reproduced
+the exact same numbers (nDCG@10 0.448, RR 0.413, R@10 0.639), confirming
+the refactor is behavior-preserving.
+
+Not yet started: alignment/whitespace wiring into the LLM-judge and
+facet-aware rerank, API, frontend. Also queued from architecture review: a
+validated `Facets` load boundary at `data/facets.json` (`api/facets.py`'s
+`validate_facets` exists but is currently dead code, never called by the
+pipeline that produces the file it's meant to validate) — deferred until
+an API layer exists to consume it, since the seam's shape is underdetermined
+until then.

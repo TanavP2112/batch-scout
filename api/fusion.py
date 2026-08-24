@@ -6,9 +6,12 @@ incomparable scales. score(doc) = sum over rankers of 1 / (k + rank), with
 the standard k=60 (Cormack et al., 2009).
 """
 
+from api.lexical import LexicalRetriever
 from api.ranking import Retriever
+from api.retrieval import DenseRetriever
 
 RRF_K = 60
+METHODS = ("dense", "lexical", "fusion")
 
 
 class FusionRetriever:
@@ -37,3 +40,20 @@ class FusionRetriever:
 
         order = sorted(scores.items(), key=lambda item: -item[1])
         return [(idx, score) for idx, score in order]
+
+
+def build_retriever(companies: list[dict], method: str, model_key: str = "bge-small") -> Retriever:
+    """Builds a Retriever over `companies` by `method` ("dense", "lexical", "fusion").
+
+    Owns the shared-companies invariant FusionRetriever's docstring warns
+    about — dense and lexical are always constructed from the same list.
+    """
+    if method == "lexical":
+        return LexicalRetriever(companies)
+    if method == "dense":
+        return DenseRetriever(companies, model_key=model_key)
+    if method == "fusion":
+        dense = DenseRetriever(companies, model_key=model_key)
+        lexical = LexicalRetriever(companies)
+        return FusionRetriever(dense, lexical)
+    raise ValueError(f"unknown method {method!r}, expected one of {METHODS}")

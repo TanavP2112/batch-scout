@@ -1,6 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from api.fusion import RRF_K, FusionRetriever
+from api.fusion import RRF_K, FusionRetriever, build_retriever
+from api.lexical import LexicalRetriever
 from tests.conftest import StubRetriever
 
 
@@ -98,3 +101,41 @@ def test_fusion_retriever_passes_query_and_exclude_index_to_both_retrievers():
 
     assert dense.calls == [("my query text", 2)]
     assert lexical.calls == [("my query text", 2)]
+
+
+def test_build_retriever_lexical_returns_lexical_retriever():
+    companies = [{"id": 0, "long_description": "widgets for widgets"}]
+    retriever = build_retriever(companies, "lexical")
+    assert isinstance(retriever, LexicalRetriever)
+
+
+def test_build_retriever_unknown_method_raises():
+    with pytest.raises(ValueError, match="unknown method"):
+        build_retriever([], "reranker")
+
+
+def test_build_retriever_dense_passes_model_key_through():
+    companies = [{"id": 0}]
+    with patch("api.fusion.DenseRetriever") as mock_dense:
+        result = build_retriever(companies, "dense", model_key="bge-large")
+        mock_dense.assert_called_once_with(companies, model_key="bge-large")
+        assert result is mock_dense.return_value
+
+
+def test_build_retriever_dense_defaults_to_bge_small():
+    companies = [{"id": 0}]
+    with patch("api.fusion.DenseRetriever") as mock_dense:
+        build_retriever(companies, "dense")
+        mock_dense.assert_called_once_with(companies, model_key="bge-small")
+
+
+def test_build_retriever_fusion_wraps_dense_and_lexical():
+    companies = [{"id": 0, "long_description": "widgets"}]
+    with patch("api.fusion.DenseRetriever") as mock_dense:
+        mock_dense.return_value = MagicMock(companies=companies)
+
+        retriever = build_retriever(companies, "fusion")
+
+        assert isinstance(retriever, FusionRetriever)
+        assert retriever.dense is mock_dense.return_value
+        assert isinstance(retriever.lexical, LexicalRetriever)

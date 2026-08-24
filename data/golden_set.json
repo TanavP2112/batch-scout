@@ -1,0 +1,152 @@
+[
+  {
+    "id": "expense-management-smb",
+    "idea_text": "we're building expense tracking for small teams that hate filling out reports, syncs with your card and just categorizes stuff automatically",
+    "relevant_company_ids": [572, 21817, 1050, 25685]
+  },
+  {
+    "id": "ai-scribe-doctors",
+    "idea_text": "an app that sits in on doctor visits and writes the clinical notes for you so physicians stop typing during patient conversations",
+    "relevant_company_ids": [28893]
+  },
+  {
+    "id": "api-testing-tool",
+    "idea_text": "postman is clunky for teams that want to mock and test APIs collaboratively as part of CI, we're building something lighter weight",
+    "relevant_company_ids": [26205]
+  },
+  {
+    "id": "freelance-photographer-marketplace",
+    "idea_text": "connecting couples planning weddings with local freelance photographers, browse portfolios and book directly",
+    "relevant_company_ids": [369, 459]
+  },
+  {
+    "id": "pet-owner-dating-app",
+    "idea_text": "a dating app just for people who own dogs, match based on your dog's breed and personality too",
+    "relevant_company_ids": []
+  },
+  {
+    "id": "rural-drone-delivery",
+    "idea_text": "using drones to deliver packages to rural addresses where the last mile is too expensive for regular trucks",
+    "relevant_company_ids": [966, 1240]
+  },
+  {
+    "id": "soc2-compliance-tracking",
+    "idea_text": "helping startups get and keep SOC2 certified without hiring a compliance consultant, tracks controls and evidence automatically",
+    "relevant_company_ids": [1781, 30528, 25696]
+  },
+  {
+    "id": "trucking-route-optimization",
+    "idea_text": "software for trucking fleet dispatchers to optimize routes and cut fuel costs across hundreds of trucks",
+    "relevant_company_ids": [13352, 22974]
+  },
+  {
+    "id": "coding-bootcamp-tutoring",
+    "idea_text": "marketplace where bootcamp grads can tutor people learning to code, pay per session",
+    "relevant_company_ids": []
+  },
+  {
+    "id": "carbon-accounting-smb",
+    "idea_text": "carbon footprint tracking for small businesses who need it for a customer RFP but can't afford enterprise sustainability software",
+    "relevant_company_ids": [28838, 25986]
+  },
+  {
+    "id": "contract-review-ai",
+    "idea_text": "AI that reviews vendor contracts for startups and flags risky clauses before you sign, instead of paying a lawyer $500/hr",
+    "relevant_company_ids": [22131]
+  },
+  {
+    "id": "async-standups-remote",
+    "idea_text": "async daily standups for remote teams, everyone records a short video update instead of a live meeting",
+    "relevant_company_ids": [24153, 22750]
+  },
+  {
+    "id": "small-landlord-property-mgmt",
+    "idea_text": "property management software built for landlords with under 10 units, not enterprise apartment complexes",
+    "relevant_company_ids": [125, 1031]
+  },
+  {
+    "id": "athlete-meal-kits",
+    "idea_text": "subscription meal kits designed around macros for people training for endurance sports",
+    "relevant_company_ids": []
+  },
+  {
+    "id": "phishing-simulation-training",
+    "idea_text": "we send fake phishing emails to employees and train the ones who click, security awareness as a service",
+    "relevant_company_ids": [13311]
+  },
+  {
+    "id": "biotech-lab-inventory",
+    "idea_text": "inventory management for biotech lab reagents and samples so scientists stop hoarding freezer space",
+    "relevant_company_ids": [85, 2026]
+  },
+  {
+    "id": "indie-game-matchmaking",
+    "idea_text": "matchmaking infrastructure indie multiplayer game studios can plug in instead of building their own",
+    "relevant_company_ids": [884]
+  },
+  {
+    "id": "podcast-clipping-tool",
+    "idea_text": "auto transcribes podcasts and finds the best clips to post as short videos for social media",
+    "relevant_company_ids": []
+  },
+  {
+    "id": "defi-onchain-analytics",
+    "idea_text": "a dashboard that tracks wallet activity and protocol flows across DeFi so traders can see where smart money is moving",
+    "relevant_company_ids": []
+  },
+  {
+    "id": "gig-worker-embedded-insurance",
+    "idea_text": "embedded insurance for gig workers, plugs into delivery apps so drivers get coverage automatically per shift",
+    "relevant_company_ids": [23064]
+  },
+  {
+    "id": "cloud-cost-monitoring",
+    "idea_text": "monitors your AWS bill in real time and tells engineering teams which services are burning money",
+    "relevant_company_ids": [24348, 23280, 27178]
+  },
+  {
+    "id": "ecommerce-support-chatbot",
+    "idea_text": "AI chatbot for shopify stores that actually resolves refunds and order status instead of just deflecting tickets",
+    "relevant_company_ids": [22353, 28417]
+  },
+  {
+    "id": "predictive-maintenance-factory",
+    "idea_text": "sensors and ML that predict when factory equipment will fail before it breaks down and stops the line",
+    "relevant_company_ids": [26718, 33344]
+  },
+  {
+    "id": "group-trip-planning",
+    "idea_text": "an app for planning trips with friends where everyone votes on the itinerary instead of one person doing all the work",
+    "relevant_company_ids": [12082, 833]
+  },
+  {
+    "id": "nonprofit-donor-crm",
+    "idea_text": "a lightweight donor CRM for small nonprofits who can't afford salesforce nonprofit cloud",
+    "relevant_company_ids": [811, 12297]
+  },
+  {
+    "id": "vet-telehealth",
+    "idea_text": "on-demand video vet visits so pet owners don't have to drive to a clinic for every small concern",
+    "relevant_company_ids": [26735]
+  },
+  {
+    "id": "contractor-bid-management",
+    "idea_text": "software for general contractors to manage bids and subcontractor quotes on construction projects",
+    "relevant_company_ids": [32525, 26863]
+  },
+  {
+    "id": "technical-interview-practice",
+    "idea_text": "mock technical interview practice with real engineers so candidates can rehearse before the real thing",
+    "relevant_company_ids": []
+  },
+  {
+    "id": "aging-in-place-monitoring",
+    "idea_text": "remote monitoring sensors for elderly parents living alone so adult children get alerts if something seems off",
+    "relevant_company_ids": [553]
+  },
+  {
+    "id": "indie-musician-royalty-tracking",
+    "idea_text": "royalty tracking and payout software for independent musicians who don't have a label handling their splits",
+    "relevant_company_ids": []
+  }
+]
