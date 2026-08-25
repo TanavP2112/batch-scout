@@ -1,0 +1,662 @@
+{
+  "athlete-meal-kits": {
+    "customer": {
+      "value": "consumer",
+      "span": "people training for endurance sports"
+    },
+    "mechanism": {
+      "value": "services-augmented",
+      "span": "meal kits"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "designed around macros for endurance athletes"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "subscription meal kits"
+    },
+    "problem": {
+      "value": "on-demand-food-delivery",
+      "span": "meal kits designed around macros"
+    }
+  },
+  "async-standups-remote": {
+    "customer": {
+      "value": "SMB",
+      "span": "remote teams"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "everyone records a short video update"
+    },
+    "wedge": {
+      "value": "faster",
+      "span": "instead of a live meeting"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "team tool for remote teams (recurring seats)"
+    },
+    "problem": {
+      "value": "enterprise-workflow-automation",
+      "span": "async daily standups for remote teams"
+    }
+  },
+  "coding-bootcamp-tutoring": {
+    "customer": {
+      "value": "marketplace-both-sides",
+      "span": "marketplace where bootcamp grads can tutor people learning to code"
+    },
+    "mechanism": {
+      "value": "marketplace",
+      "span": "marketplace where bootcamp grads can tutor"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "bootcamp grads as new tutor supply for coding learners"
+    },
+    "business_model": {
+      "value": "take-rate",
+      "span": "pay per session"
+    },
+    "problem": {
+      "value": "tech-skills-training-and-job-placement",
+      "span": "people learning to code"
+    }
+  },
+  "trucking-route-optimization": {
+    "customer": {
+      "value": "mid-market",
+      "span": "trucking fleet dispatchers ... across hundreds of trucks"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "software for trucking fleet dispatchers"
+    },
+    "wedge": {
+      "value": "cheaper",
+      "span": "optimize routes and cut fuel costs"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "software for trucking fleet dispatchers"
+    },
+    "problem": {
+      "value": "enterprise-workflow-automation",
+      "span": "dispatchers to optimize routes across hundreds of trucks"
+    }
+  },
+  "indie-musician-royalty-tracking": {
+    "customer": {
+      "value": "prosumer",
+      "span": "independent musicians who don't have a label"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "royalty tracking and payout software"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "musicians who don't have a label handling their splits"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "software for independent musicians"
+    },
+    "problem": {
+      "value": "financial-reconciliation-and-controls-automation",
+      "span": "royalty tracking and payout ... splits"
+    }
+  },
+  "vet-telehealth": {
+    "customer": {
+      "value": "consumer",
+      "span": "pet owners"
+    },
+    "mechanism": {
+      "value": "services-augmented",
+      "span": "on-demand video vet visits"
+    },
+    "wedge": {
+      "value": "faster",
+      "span": "don't have to drive to a clinic for every small concern"
+    },
+    "business_model": {
+      "value": "usage-based",
+      "span": "on-demand video visits"
+    },
+    "problem": {
+      "value": "chronic-condition-care-access",
+      "span": "remote vet care access for small concerns"
+    }
+  },
+  "ai-scribe-doctors": {
+    "customer": {
+      "value": "prosumer",
+      "span": "physicians stop typing during patient conversations"
+    },
+    "mechanism": {
+      "value": "AI-agent/copilot",
+      "span": "an app that sits in on doctor visits and writes the clinical notes"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "sits in on doctor visits and writes the clinical notes for you"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "an app ... for physicians"
+    },
+    "problem": {
+      "value": "clinical-documentation-automation",
+      "span": "writes the clinical notes for you"
+    }
+  },
+  "defi-onchain-analytics": {
+    "customer": {
+      "value": "prosumer",
+      "span": "so traders can see where smart money is moving"
+    },
+    "mechanism": {
+      "value": "data/analytics",
+      "span": "a dashboard that tracks wallet activity and protocol flows"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "see where smart money is moving"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "dashboard for traders (implied recurring access)"
+    },
+    "problem": {
+      "value": "fragmented-business-data-unification",
+      "span": "tracks wallet activity and protocol flows across DeFi"
+    }
+  },
+  "phishing-simulation-training": {
+    "customer": {
+      "value": "SMB",
+      "span": "security awareness as a service for employees"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "security awareness as a service"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "we send fake phishing emails to employees"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "as a service"
+    },
+    "problem": {
+      "value": "fraud-detection-and-compliance-investigation",
+      "span": "train the ones who click on phishing emails"
+    }
+  },
+  "small-landlord-property-mgmt": {
+    "customer": {
+      "value": "SMB",
+      "span": "landlords with under 10 units"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "property management software"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "built for landlords with under 10 units, not enterprise apartment complexes"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "property management software"
+    },
+    "problem": {
+      "value": "residential-property-transactions",
+      "span": "property management software built for landlords"
+    }
+  },
+  "carbon-accounting-smb": {
+    "customer": {
+      "value": "SMB",
+      "span": "small businesses"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "sustainability software"
+    },
+    "wedge": {
+      "value": "cheaper",
+      "span": "can't afford enterprise sustainability software"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "software affordable for small businesses"
+    },
+    "problem": {
+      "value": "fragmented-business-data-unification",
+      "span": "carbon footprint tracking ... needed for a customer RFP"
+    }
+  },
+  "cloud-cost-monitoring": {
+    "customer": {
+      "value": "developer",
+      "span": "tells engineering teams which services are burning money"
+    },
+    "mechanism": {
+      "value": "data/analytics",
+      "span": "monitors your AWS bill in real time"
+    },
+    "wedge": {
+      "value": "faster",
+      "span": "in real time"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "monitoring tool for engineering teams"
+    },
+    "problem": {
+      "value": "application-deployment-infrastructure-management",
+      "span": "monitors your AWS bill... which services are burning money"
+    }
+  },
+  "freelance-photographer-marketplace": {
+    "customer": {
+      "value": "consumer",
+      "span": "couples planning weddings"
+    },
+    "mechanism": {
+      "value": "marketplace",
+      "span": "connecting couples with local freelance photographers"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "local freelance photographers"
+    },
+    "business_model": {
+      "value": "take-rate",
+      "span": "book directly"
+    },
+    "problem": {
+      "value": "booking-and-payment-management",
+      "span": "browse portfolios and book directly"
+    }
+  },
+  "rural-drone-delivery": {
+    "customer": {
+      "value": "consumer",
+      "span": "deliver packages to rural addresses"
+    },
+    "mechanism": {
+      "value": "hardware",
+      "span": "using drones to deliver packages"
+    },
+    "wedge": {
+      "value": "cheaper",
+      "span": "last mile is too expensive for regular trucks"
+    },
+    "business_model": {
+      "value": "usage-based",
+      "span": "deliver packages"
+    },
+    "problem": {
+      "value": "e-commerce-last-mile-delivery",
+      "span": "last mile ... deliver packages to rural addresses"
+    }
+  },
+  "contractor-bid-management": {
+    "customer": {
+      "value": "SMB",
+      "span": "general contractors"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "software to manage bids and subcontractor quotes"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "construction projects vertical software for general contractors"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "software for general contractors"
+    },
+    "problem": {
+      "value": "procurement-and-vendor-management",
+      "span": "manage bids and subcontractor quotes"
+    }
+  },
+  "group-trip-planning": {
+    "customer": {
+      "value": "consumer",
+      "span": "planning trips with friends"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "an app for planning trips"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "everyone votes instead of one person doing all the work"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "an app for planning trips with friends"
+    },
+    "problem": {
+      "value": "personal-task-and-schedule-management",
+      "span": "everyone votes on the itinerary"
+    }
+  },
+  "biotech-lab-inventory": {
+    "customer": {
+      "value": "SMB",
+      "span": "biotech lab teams managing reagents and samples"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "inventory management software for lab reagents"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "purpose-built for biotech labs and freezer space"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "inventory management tool for labs"
+    },
+    "problem": {
+      "value": "procurement-and-vendor-management",
+      "span": "inventory management for lab reagents and samples"
+    }
+  },
+  "aging-in-place-monitoring": {
+    "customer": {
+      "value": "consumer",
+      "span": "adult children get alerts about elderly parents"
+    },
+    "mechanism": {
+      "value": "hardware",
+      "span": "remote monitoring sensors"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "elderly parents living alone, monitored by adult children"
+    },
+    "business_model": {
+      "value": "hardware-margin",
+      "span": "sells remote monitoring sensors"
+    },
+    "problem": {
+      "value": "chronic-condition-care-access",
+      "span": "alerts if something seems off with elderly parent"
+    }
+  },
+  "podcast-clipping-tool": {
+    "customer": {
+      "value": "prosumer",
+      "span": "podcasters wanting clips to post on social media"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "auto transcribes podcasts and finds the best clips"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "automatically finds the best clips to post as short videos"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "tool for recurring podcast clip production"
+    },
+    "problem": {
+      "value": "video-content-creation",
+      "span": "finds the best clips to post as short videos"
+    }
+  },
+  "indie-game-matchmaking": {
+    "customer": {
+      "value": "developer",
+      "span": "indie multiplayer game studios"
+    },
+    "mechanism": {
+      "value": "infrastructure/API",
+      "span": "matchmaking infrastructure ... plug in"
+    },
+    "wedge": {
+      "value": "faster",
+      "span": "plug in instead of building their own"
+    },
+    "business_model": {
+      "value": "usage-based",
+      "span": "matchmaking infrastructure studios plug into"
+    },
+    "problem": {
+      "value": "application-deployment-infrastructure-management",
+      "span": "matchmaking infrastructure ... instead of building their own"
+    }
+  },
+  "predictive-maintenance-factory": {
+    "customer": {
+      "value": "enterprise",
+      "span": "factory equipment ... stops the line"
+    },
+    "mechanism": {
+      "value": "data/analytics",
+      "span": "sensors and ML that predict when equipment will fail"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "predict failure before it breaks down"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "ongoing monitoring of factory equipment (implied recurring)"
+    },
+    "problem": {
+      "value": "enterprise-workflow-automation",
+      "span": "predict equipment failure before it stops the production line"
+    }
+  },
+  "expense-management-smb": {
+    "customer": {
+      "value": "SMB",
+      "span": "expense tracking for small teams"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "syncs with your card and just categorizes stuff automatically"
+    },
+    "wedge": {
+      "value": "faster",
+      "span": "small teams that hate filling out reports"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "we're building expense tracking for small teams"
+    },
+    "problem": {
+      "value": "financial-reconciliation-and-controls-automation",
+      "span": "automatically categorizes card transactions instead of manual expense reports"
+    }
+  },
+  "nonprofit-donor-crm": {
+    "customer": {
+      "value": "SMB",
+      "span": "small nonprofits"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "a lightweight donor CRM"
+    },
+    "wedge": {
+      "value": "cheaper",
+      "span": "who can't afford salesforce nonprofit cloud"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "CRM software for small nonprofits (SaaS subscription)"
+    },
+    "problem": {
+      "value": "fragmented-business-data-unification",
+      "span": "donor CRM"
+    }
+  },
+  "gig-worker-embedded-insurance": {
+    "customer": {
+      "value": "consumer",
+      "span": "gig workers ... drivers get coverage"
+    },
+    "mechanism": {
+      "value": "embedded-fintech",
+      "span": "embedded insurance ... plugs into delivery apps"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "insurance for gig workers"
+    },
+    "business_model": {
+      "value": "usage-based",
+      "span": "coverage automatically per shift"
+    },
+    "problem": {
+      "value": "insurance-access-for-underserved-segments",
+      "span": "embedded insurance for gig workers"
+    }
+  },
+  "api-testing-tool": {
+    "customer": {
+      "value": "developer",
+      "span": "teams that want to mock and test APIs collaboratively"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "collaborative API mocking and testing as part of CI"
+    },
+    "wedge": {
+      "value": "unbundling-incumbent",
+      "span": "postman is clunky... we're building something lighter weight"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "something lighter weight for teams"
+    },
+    "problem": {
+      "value": "automated-end-to-end-software-testing",
+      "span": "mock and test APIs collaboratively as part of CI"
+    }
+  },
+  "ecommerce-support-chatbot": {
+    "customer": {
+      "value": "SMB",
+      "span": "AI chatbot for shopify stores"
+    },
+    "mechanism": {
+      "value": "AI-agent/copilot",
+      "span": "AI chatbot ... resolves refunds and order status"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "actually resolves refunds and order status instead of just deflecting tickets"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "chatbot for shopify stores (recurring software for merchants)"
+    },
+    "problem": {
+      "value": "customer-support-call-automation",
+      "span": "resolves refunds and order status instead of just deflecting tickets"
+    }
+  },
+  "soc2-compliance-tracking": {
+    "customer": {
+      "value": "SMB",
+      "span": "helping startups get and keep SOC2 certified"
+    },
+    "mechanism": {
+      "value": "SaaS-workflow",
+      "span": "tracks controls and evidence automatically"
+    },
+    "wedge": {
+      "value": "cheaper",
+      "span": "without hiring a compliance consultant"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "get and keep SOC2 certified (ongoing software)"
+    },
+    "problem": {
+      "value": "financial-reconciliation-and-controls-automation",
+      "span": "tracks controls and evidence automatically"
+    }
+  },
+  "contract-review-ai": {
+    "customer": {
+      "value": "SMB",
+      "span": "vendor contracts for startups"
+    },
+    "mechanism": {
+      "value": "AI-agent/copilot",
+      "span": "AI that reviews vendor contracts"
+    },
+    "wedge": {
+      "value": "cheaper",
+      "span": "instead of paying a lawyer $500/hr"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "AI review replacing hourly lawyer fees"
+    },
+    "problem": {
+      "value": "procurement-and-vendor-management",
+      "span": "reviews vendor contracts, flags risky clauses before you sign"
+    }
+  },
+  "technical-interview-practice": {
+    "customer": {
+      "value": "consumer",
+      "span": "candidates so candidates can rehearse before the real thing"
+    },
+    "mechanism": {
+      "value": "marketplace",
+      "span": "practice with real engineers"
+    },
+    "wedge": {
+      "value": "novel-capability",
+      "span": "mock technical interview practice with real engineers"
+    },
+    "business_model": {
+      "value": "take-rate",
+      "span": "connecting candidates with real engineers for paid mock interviews"
+    },
+    "problem": {
+      "value": "tech-skills-training-and-job-placement",
+      "span": "mock technical interview practice ... rehearse before the real thing"
+    }
+  },
+  "pet-owner-dating-app": {
+    "customer": {
+      "value": "consumer",
+      "span": "people who own dogs"
+    },
+    "mechanism": {
+      "value": "marketplace",
+      "span": "dating app ... match based on"
+    },
+    "wedge": {
+      "value": "new-user-segment",
+      "span": "just for people who own dogs"
+    },
+    "business_model": {
+      "value": "subscription",
+      "span": "dating app (consumer subscription)"
+    },
+    "problem": {
+      "value": "shared-remote-social-experiences",
+      "span": "a dating app ... match based on your dog's breed and personality"
+    }
+  }
+}

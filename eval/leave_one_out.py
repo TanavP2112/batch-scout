@@ -15,6 +15,7 @@ Usage:
 """
 
 import argparse
+import pathlib
 import random
 from collections import defaultdict
 
@@ -22,8 +23,13 @@ import ir_measures
 from ir_measures import MRR, Recall, nDCG
 
 from api.corpus import company_text, load_corpus
+from api.facets import load_facets
 from api.fusion import build_retriever
 from api.ranking import Retriever
+from api.rerank import FacetRerankRetriever
+
+DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
+FACETS_PATH = DATA_DIR / "facets.json"
 
 RUN_DEPTH = 100  # candidates kept per query; enough for Recall@10/nDCG@10/MRR
 
@@ -67,8 +73,8 @@ def main() -> None:
     parser.add_argument(
         "--method",
         default="dense",
-        choices=["dense", "lexical", "fusion"],
-        help="dense-only, BM25-only, or RRF fusion of both",
+        choices=["dense", "lexical", "fusion", "facet-rerank"],
+        help="dense-only, BM25-only, RRF fusion, or fusion + facet-aware rerank of the top 50",
     )
     args = parser.parse_args()
 
@@ -82,7 +88,13 @@ def main() -> None:
         query_indices = rng.sample(range(len(companies)), min(args.n, len(companies)))
     print(f"queries: {len(query_indices)} (seed={args.seed})")
 
-    retriever = build_retriever(companies, args.method, model_key=args.model)
+    if args.method == "facet-rerank":
+        fusion = build_retriever(companies, "fusion", model_key=args.model)
+        facets = load_facets(FACETS_PATH)
+        facets_by_index = {i: facets[str(c["id"])] for i, c in enumerate(companies)}
+        retriever = FacetRerankRetriever(fusion, facets_by_index)
+    else:
+        retriever = build_retriever(companies, args.method, model_key=args.model)
 
     qrels = build_qrels(companies, query_indices)
     run = build_run(retriever, companies, query_indices)

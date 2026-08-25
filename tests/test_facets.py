@@ -1,6 +1,17 @@
+import json
+
 import pytest
 
-from api.facets import FACET_NAMES, extraction_schema, validate_facets
+from api.facets import FACET_NAMES, extraction_schema, load_facets, validate_facets
+
+
+def test_load_facets_reads_json_keyed_by_company_id(tmp_path):
+    path = tmp_path / "facets.json"
+    path.write_text(json.dumps({"572": {"customer": {"value": "SMB", "span": "s"}}}))
+
+    facets = load_facets(path)
+
+    assert facets == {"572": {"customer": {"value": "SMB", "span": "s"}}}
 
 
 def test_extraction_schema_requires_all_five_facets():
@@ -17,10 +28,16 @@ def test_extraction_schema_controlled_facets_have_enum():
         assert len(value_schema["enum"]) > 0
 
 
-def test_extraction_schema_problem_has_no_enum():
+def test_extraction_schema_problem_has_no_enum_by_default():
     schema = extraction_schema()
     value_schema = schema["properties"]["problem"]["properties"]["value"]
     assert "enum" not in value_schema
+
+
+def test_extraction_schema_problem_enum_when_given():
+    schema = extraction_schema(problem_enum=["expense-report-automation", "pet-care"])
+    value_schema = schema["properties"]["problem"]["properties"]["value"]
+    assert value_schema["enum"] == ["expense-report-automation", "pet-care"]
 
 
 def test_extraction_schema_facet_requires_value_and_span():

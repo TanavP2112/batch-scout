@@ -10,6 +10,9 @@ guessed upfront, per the plan's rationale that a hand-authored taxonomy is
 wrong in ways that surface too late.
 """
 
+import json
+import pathlib
+
 CUSTOMER = [
     "consumer",
     "prosumer",
@@ -77,18 +80,22 @@ def _facet_property(enum_values: list[str] | None) -> dict:
     }
 
 
-def extraction_schema() -> dict:
+def extraction_schema(problem_enum: list[str] | None = None) -> dict:
     """JSON schema for one company/idea's facet extraction (output_config.format).
 
-    `problem.value` has no enum yet — it's filled in by the clustering pass.
-    Requiring it as a string here still forces the model to produce *some*
-    normalized short label, which seeds the clustering step.
+    `problem.value` has no enum by default — for the initial corpus pass,
+    it's free text that seeds pipeline.cluster_problems's bottom-up
+    clustering. Once that clustering has produced a corpus-wide `problem`
+    enum, pass it as `problem_enum` when extracting facets for anything
+    that needs to be *compared* against the corpus (e.g. a golden-set idea
+    for facet-aware rerank) — otherwise the idea gets a fresh free-text
+    label that can never match any corpus company's `problem` value.
     """
     return {
         "type": "object",
         "properties": {
             **{name: _facet_property(enum) for name, enum in FACET_ENUMS.items()},
-            "problem": _facet_property(None),
+            "problem": _facet_property(problem_enum),
         },
         "required": FACET_NAMES,
         "additionalProperties": False,
@@ -110,3 +117,8 @@ def validate_facets(facets: dict) -> None:
         value = facets[name]["value"]
         if value not in enum_values:
             raise ValueError(f"{name}={value!r} not in {enum_values}")
+
+
+def load_facets(path: pathlib.Path | str) -> dict[str, dict]:
+    """Loads a facets.json-shaped file: {company_id: {facet_name: {value, span}}}."""
+    return json.loads(pathlib.Path(path).read_text())

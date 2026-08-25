@@ -68,11 +68,12 @@ statistics, never as a per-company grid column or an interpretive verdict.
 
 Setup: `python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
 
-- `python -m eval.leave_one_out` — retrieval eval, 300 sampled queries, `bge-small`. Flags: `--n`, `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion}`, `--full` (every company as a query), `--seed`.
+- `python -m eval.leave_one_out` — retrieval eval, 300 sampled queries, `bge-small`. Flags: `--n`, `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion,facet-rerank}`, `--full` (every company as a query), `--seed`.
 - `python -m pipeline.refresh --dry-run` — verify the live snapshot source still fetches.
 - `python -m pipeline.extract_facets submit [--n N]` then `python -m pipeline.extract_facets poll [--watch] [batch_id]` — submits/collects the facet-extraction Batch job. Requires `ANTHROPIC_API_KEY`; costs real money (measured $0.10 for a 20-company sample, so ≈$30 projected for the full ~6,132-company corpus — in line with the plan's ~$27 estimate) and is not run in CI. `--watch` polls every 30s instead of a single check.
 - `python -m pipeline.cluster_problems [--k 40]` — clusters `data/facets_raw.json`'s normalized `problem` labels into the bottom-up `problem` enum (naming clusters by embedding medoid, locally — no API key needed) and writes committed `data/facets.json`. Requires `data/facets_raw.json` to already exist.
-- `python -m eval.golden_set` — retrieval eval against `data/golden_set.json`'s 30 hand-labeled founder-voice ideas. Flags: `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion}` (default `fusion`). No API key needed — local embeddings only.
+- `python -m eval.golden_set` — retrieval eval against `data/golden_set.json`'s 30 hand-labeled founder-voice ideas. Flags: `--model {bge-small,bge-large}`, `--method {dense,lexical,fusion,facet-rerank}` (default `fusion`). No API key needed — local embeddings only (`facet-rerank` reads committed `data/golden_set_facets.json`, no live call).
+- `python -m pipeline.extract_golden_set_facets submit` then `poll [--watch] [batch_id]` — one-off batch classifying `data/golden_set.json`'s 30 ideas into the five facets (using the corpus's already-derived `problem` enum, so results are comparable to `data/facets.json`). Requires `ANTHROPIC_API_KEY`; already run once, ~$0.18 measured. Writes `data/golden_set_facets.json` (committed).
 - `python -m eval.llm_judge submit` then `python -m eval.llm_judge poll [--watch] [batch_id]` — judges the fusion retriever's golden-set top-10 (300 pairs) for relevance via a Batches job (`claude-sonnet-5`). Requires `ANTHROPIC_API_KEY`; not run in CI.
 
 Not yet added: `pytest eval/`, `python -m eval.ablate` (full ablation table), Dockerfile.
@@ -102,11 +103,24 @@ Build-order step 3 done: BM25 lexical retrieval (`api/lexical.py`, via
 (`api/fusion.py`, k=60, standard Cormack et al. constant) combining dense and
 lexical ranks by reciprocal rank rather than raw score, since BM25 scores and
 cosine similarities aren't on comparable scales. `eval.leave_one_out` now
-takes `--method {dense,lexical,fusion}`. Same 300-query harness, `bge-small`:
+takes `--method {dense,lexical,fusion}`. Same 300-query harness, `bge-small`.
 
-- dense:   nDCG@10 0.247 | MRR 0.449 | Recall@10 0.024
-- lexical: nDCG@10 0.223 | MRR 0.401 | Recall@10 0.020
-- fusion:  nDCG@10 0.275 | MRR 0.460 | Recall@10 0.026
+**Numbers corrected 2026-08-24** (see the facet-rerank section below for how
+this was caught): the dense/lexical/fusion numbers below were re-measured
+and differ from what this section originally reported
+(0.247/0.223/0.275 nDCG@10). Root cause: the original numbers predate a
+re-run against the current corpus — `company_text`/`load_corpus` had a
+whitespace-fallback bug (fixed in the commit that introduced this test
+suite) that changed which 3 companies' text was usable, which shifts every
+downstream index and therefore the seeded 300-query sample, even for
+lexical (BM25, fully deterministic — confirmed via a fresh re-run, which is
+what proved this wasn't run-to-run embedding noise). The fix predates this
+session; the recorded numbers just never got regenerated after it landed.
+Current, accurate:
+
+- dense:   nDCG@10 0.233 | MRR 0.452 | Recall@10 0.021
+- lexical: nDCG@10 0.210 | MRR 0.418 | Recall@10 0.017
+- fusion:  nDCG@10 0.258 | MRR 0.463 | Recall@10 0.023
 
 Fusion beats dense-only on all three metrics — lexical alone is weaker, but
 it catches sharp keyword/name overlaps dense embeddings blur past, so
@@ -257,3 +271,75 @@ validated `Facets` load boundary at `data/facets.json` (`api/facets.py`'s
 pipeline that produces the file it's meant to validate) — deferred until
 an API layer exists to consume it, since the seam's shape is underdetermined
 until then.
+
+Build-order step 6 done: facet-aware rerank, `api/rerank.py`. Within the
+fused top-50, `rerank_by_facets` stable-sorts by descending
+`facet_match_count` (0-5 shared enum values) against the query's own
+facets, keeping RRF order as the tiebreak — a plain count, not a tuned
+weighted blend, matching CONTEXT.md's "alignment is never a scalar" spirit.
+`FacetRerankRetriever` wraps any Retriever and satisfies the same protocol,
+so it drops into `eval.leave_one_out.build_run` unchanged. It gets the
+query's own facets via `exclude_index` — in leave-one-out the query *is*
+corpus row `exclude_index`, and that row's facets are already committed in
+`data/facets.json`, so this ablation needed zero new API calls.
+
+**Bug caught and fixed:** the first working version reordered the
+`(index, score)` list but left the *old* retrieval score attached to each
+entry. `ir_measures.calc_aggregate` ranks purely off the numeric score
+field — confirmed directly by feeding it a tiny hand-built run where the
+"first" doc has the lowest score, and it ranked last, regardless of dict/
+list order — so a reorder that doesn't rewrite the score is silently a
+no-op for every metric. It was caught because two independent ablation
+rows (this one and golden-set's, below) came back suspiciously identical
+to their respective plain-fusion baselines. Fix: `rerank_by_facets` now
+assigns a synthetic score that directly encodes the new order (descending
+by final rank position), with every reranked entry scoring above every
+untouched tail entry. TDD'd, 12 tests total in `tests/test_rerank.py`.
+`eval.leave_one_out` and `eval.golden_set` both take `--method
+facet-rerank`. Same 300-query harness, `bge-small` (post the baseline
+correction above):
+
+- dense:        nDCG@10 0.233 | MRR 0.452 | Recall@10 0.021
+- lexical:      nDCG@10 0.210 | MRR 0.418 | Recall@10 0.017
+- fusion:       nDCG@10 0.258 | MRR 0.463 | Recall@10 0.023
+- facet-rerank: nDCG@10 0.298 | MRR 0.508 | Recall@10 0.026
+
+A real win this time, on all three metrics — unlike the pre-fix numbers,
+which happened to be measuring plain fusion twice.
+
+The golden-set version of this row is no longer blocked: `data/
+golden_set_facets.json` (all 30 ideas, extracted via
+`pipeline/extract_golden_set_facets.py` against the corpus's already-derived
+40-value `problem` enum — see below) exists now. `eval.golden_set
+--method facet-rerank`:
+
+- fusion (baseline):  nDCG@10 0.448 | MRR 0.413 | Recall@10 0.639
+- facet-rerank:        nDCG@10 0.353 | MRR 0.343 | Recall@10 0.561
+
+A decline here, reported honestly rather than cherry-picked — the two
+harnesses disagree. Plausible reading: leave-one-out's weak subindustry
+labels happen to correlate with the five idea facets (both are coarse
+industry-shaped categories), so facet-match promotion helps there; the
+golden set's 30 hand-labeled qrels are true relevance judgments with very
+few positives per idea (many ideas have 0-2 relevant companies total), so
+promoting by raw facet-match count has more room to bump a facet-similar
+but not-actually-relevant company above the one or two real hits. Facet
+rerank is not a documented unconditional win — worth carrying into the
+final ablation table as a real, mixed result rather than picking whichever
+harness looks better.
+
+`pipeline/extract_golden_set_facets.py`: a one-off batch (not part of the
+regular corpus pipeline) that classifies each golden idea into the five
+facets, passing the corpus's already-derived `problem` enum
+(`api/facets.extraction_schema(problem_enum=...)`, a new optional param) so
+idea-side and corpus-side `problem` values are directly comparable — the
+free-text version would have produced fresh labels that could never match
+any corpus company's `problem` value, silently zeroing that facet's
+contribution to every match count. Cost: measured exactly from real batch
+`usage` (not estimated) — $0.176 total for all 30 ideas on `claude-opus-5`
+Batch API (1,058 fresh + 1,917 cached input tokens, 13,858 output tokens).
+Note `count_tokens` badly overestimates cost for schema-heavy structured-
+output requests (it counted the full JSON schema as ~1,952 tokens/request
+of literal prompt text; real billed input was ~99 tokens/request) — trust
+real batch `usage`, not `count_tokens`, for anything with a nontrivial
+`output_config.format` schema.
