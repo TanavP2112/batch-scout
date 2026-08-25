@@ -343,3 +343,44 @@ output requests (it counted the full JSON schema as ~1,952 tokens/request
 of literal prompt text; real billed input was ~99 tokens/request) — trust
 real batch `usage`, not `count_tokens`, for anything with a nontrivial
 `output_config.format` schema.
+
+Build-order step 8 started: the FastAPI query-time path. `api/query.py`
+holds `build_query_result` — the pure core (rank → facet-rerank the top 50
+via the same `rerank_by_facets` step 6 introduced → attach an
+`build_alignment_grid` per displayed company → compute `find_whitespace`
+per facet over the displayed cohort), unit-tested against synthetic
+fixtures with no corpus or API dependency, per the `tdd` skill. Its
+`enum_values_for` helper closes a real gap: `problem` has no hand-authored
+enum (see step 4), so whitespace for that facet is computed against every
+distinct value observed across the *full* corpus, not just the 12
+displayed companies — tested explicitly (`test_problem_whitespace_enum_
+universe_is_the_full_corpus_not_just_the_displayed_cohort`) so a value
+absent from the top 12 but present elsewhere in the corpus doesn't get
+misreported as true whitespace.
+
+`api/extract_idea.py` is the query-time facet-extraction call — a single
+synchronous `client.messages.create`, not the Batches API, since a founder
+typing an idea can't wait for batch turnaround. Reuses
+`pipeline.extract_facets`'s `MODEL`/`SYSTEM_PROMPT` and passes the corpus's
+own `problem` enum (same reasoning as `extract_golden_set_facets.py`, so
+a live idea's `problem` value is directly comparable to a company's).
+Split into pure request/response functions (tested with a hand-built fake
+message object, mirroring `tests/test_anthropic_batch.py`'s pattern) and a
+thin `extract_idea_facets` I/O wrapper.
+
+`api/app.py` wires it together: `handle_query` (extract → `validate_facets`
+→ `build_query_result`, tested with a fake extractor and fake retriever —
+no corpus, no live call) is the seam; `create_app()` is the thin FastAPI
+factory that loads the corpus, builds the fusion retriever, and loads
+committed `data/facets.json` once at process startup rather than
+per-request, then exposes `POST /query`. This is also the load-bearing
+call site `api/facets.py`'s `validate_facets` was waiting on — it was dead
+code until now (see step 5's note); it now guards every live extraction
+before the pure core ever sees it. Verified the app boots end-to-end
+(`create_app()` loads the real corpus/retriever/facets with no errors) —
+the live `/query` call itself is untested against the real API, still
+blocked by the same org usage quota (resets 2026-09-01 00:00 UTC) noted in
+steps 4 and 7. `fastapi`/`uvicorn` added to `requirements.txt`.
+
+Not yet done: rate limiting, the normalized-hash query cache, canned
+example ideas, the SPA, and Dockerfile — the rest of step 8/9.
