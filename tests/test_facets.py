@@ -2,7 +2,14 @@ import json
 
 import pytest
 
-from api.facets import FACET_NAMES, extraction_schema, load_facets, validate_facets
+from api.facets import (
+    FACET_NAMES,
+    distinct_facet_values,
+    extraction_schema,
+    facets_by_corpus_index,
+    load_facets,
+    validate_facets,
+)
 
 
 def test_load_facets_reads_json_keyed_by_company_id(tmp_path):
@@ -79,3 +86,25 @@ def test_validate_facets_does_not_require_problem_enum_membership():
     facets = _valid_facets()
     facets["problem"]["value"] = "anything-goes-here"
     validate_facets(facets)  # no exception — problem has no fixed enum
+
+
+def test_distinct_facet_values_returns_sorted_unique_values():
+    facets_by_id = {
+        "1": {"problem": {"value": "pet-care", "span": "s"}},
+        "2": {"problem": {"value": "expense-tracking", "span": "s"}},
+        "3": {"problem": {"value": "pet-care", "span": "s"}},
+    }
+    assert distinct_facet_values("problem", facets_by_id) == ["expense-tracking", "pet-care"]
+
+
+def test_facets_by_corpus_index_remaps_by_company_id():
+    companies = [{"id": 572}, {"id": 9}]
+    facets_by_id = {
+        "572": {"customer": {"value": "SMB", "span": "s"}},
+        "9": {"customer": {"value": "enterprise", "span": "s"}},
+    }
+    result = facets_by_corpus_index(companies, facets_by_id)
+    assert result == {
+        0: {"customer": {"value": "SMB", "span": "s"}},
+        1: {"customer": {"value": "enterprise", "span": "s"}},
+    }

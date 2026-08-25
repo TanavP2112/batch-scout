@@ -8,7 +8,7 @@ per-company, whitespace is per-cohort, neither is ever a scalar.
 """
 
 from api.alignment import build_alignment_grid
-from api.facets import FACET_ENUMS, FACET_NAMES
+from api.facets import FACET_ENUMS, FACET_NAMES, distinct_facet_values
 from api.ranking import Retriever
 from api.rerank import rerank_by_facets
 from api.whitespace import find_whitespace
@@ -20,7 +20,7 @@ def enum_values_for(facet_name: str, corpus_facets_by_index: dict[int, dict]) ->
     """
     if facet_name in FACET_ENUMS:
         return FACET_ENUMS[facet_name]
-    return sorted({facets[facet_name]["value"] for facets in corpus_facets_by_index.values()})
+    return distinct_facet_values(facet_name, corpus_facets_by_index)
 
 
 def build_query_result(

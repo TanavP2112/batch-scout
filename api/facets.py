@@ -122,3 +122,22 @@ def validate_facets(facets: dict) -> None:
 def load_facets(path: pathlib.Path | str) -> dict[str, dict]:
     """Loads a facets.json-shaped file: {company_id: {facet_name: {value, span}}}."""
     return json.loads(pathlib.Path(path).read_text())
+
+
+def distinct_facet_values(facet_name: str, facets_by_id: dict[str, dict]) -> list[str]:
+    """Every distinct value a facet takes across a facets.json-shaped dict, sorted.
+
+    The single source of truth for a corpus-derived enum universe (e.g.
+    `problem`, which has no hand-authored enum) — anything that needs to
+    compare a facet's value against "every value seen in the corpus" should
+    call this rather than re-deriving it, so idea-side and corpus-side
+    derivations of the same enum can never drift apart.
+    """
+    return sorted({entry[facet_name]["value"] for entry in facets_by_id.values()})
+
+
+def facets_by_corpus_index(companies: list[dict], facets_by_id: dict[str, dict]) -> dict[int, dict]:
+    """Remaps a facets.json-shaped dict (keyed by company id) to corpus index,
+    matching the (index, score) pairs a Retriever.rank returns.
+    """
+    return {i: facets_by_id[str(c["id"])] for i, c in enumerate(companies)}

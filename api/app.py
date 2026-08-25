@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from api.corpus import load_corpus
 from api.extract_idea import extract_idea_facets
-from api.facets import load_facets, validate_facets
+from api.facets import facets_by_corpus_index, load_facets, validate_facets
 from api.fusion import build_retriever
 from api.query import build_query_result, enum_values_for
 from api.ranking import Retriever
@@ -49,8 +49,7 @@ def create_app() -> FastAPI:
 
     companies = load_corpus()
     retriever = build_retriever(companies, "fusion")
-    corpus_facets = load_facets(FACETS_PATH)
-    corpus_facets_by_index = {i: corpus_facets[str(c["id"])] for i, c in enumerate(companies)}
+    corpus_facets_by_index = facets_by_corpus_index(companies, load_facets(FACETS_PATH))
     problem_values = enum_values_for("problem", corpus_facets_by_index)
     client = Anthropic()
 

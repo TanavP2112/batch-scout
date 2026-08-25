@@ -22,7 +22,7 @@ import ir_measures
 from ir_measures import MRR, Recall, nDCG
 
 from api.corpus import load_corpus
-from api.facets import load_facets
+from api.facets import facets_by_corpus_index, load_facets
 from api.fusion import build_retriever
 from api.ranking import Retriever
 from api.rerank import rerank_by_facets
@@ -96,8 +96,7 @@ def main() -> None:
 
     if args.method == "facet-rerank":
         fusion = build_retriever(companies, "fusion", model_key=args.model)
-        corpus_facets = load_facets(FACETS_PATH)
-        corpus_facets_by_index = {i: corpus_facets[str(c["id"])] for i, c in enumerate(companies)}
+        corpus_facets_by_index = facets_by_corpus_index(companies, load_facets(FACETS_PATH))
         idea_facets_by_id = load_facets(GOLDEN_SET_FACETS_PATH)
         run = build_facet_rerank_run(fusion, golden_set, idea_facets_by_id, corpus_facets_by_index)
     else:

@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 
 from api.anthropic_batch import poll_and_collect as _poll_and_collect
 from api.anthropic_batch import submit_batch
-from api.facets import extraction_schema, load_facets
+from api.facets import distinct_facet_values, extraction_schema, load_facets
 from eval.golden_set import load_golden_set
 from pipeline.extract_facets import MODEL, SYSTEM_PROMPT
 
@@ -37,8 +37,7 @@ BATCH_ID_PATH = DATA_DIR / "golden_set_facets_batch_id.txt"
 
 def problem_enum() -> list[str]:
     """The corpus-derived `problem` enum: every distinct value in the committed facets.json."""
-    facets = load_facets(FACETS_PATH)
-    return sorted({entry["problem"]["value"] for entry in facets.values()})
+    return distinct_facet_values("problem", load_facets(FACETS_PATH))
 
 
 def build_idea_request(entry: dict, problem_values: list[str]) -> Request:

@@ -23,7 +23,7 @@ import ir_measures
 from ir_measures import MRR, Recall, nDCG
 
 from api.corpus import company_text, load_corpus
-from api.facets import load_facets
+from api.facets import facets_by_corpus_index, load_facets
 from api.fusion import build_retriever
 from api.ranking import Retriever
 from api.rerank import FacetRerankRetriever
@@ -90,8 +90,7 @@ def main() -> None:
 
     if args.method == "facet-rerank":
         fusion = build_retriever(companies, "fusion", model_key=args.model)
-        facets = load_facets(FACETS_PATH)
-        facets_by_index = {i: facets[str(c["id"])] for i, c in enumerate(companies)}
+        facets_by_index = facets_by_corpus_index(companies, load_facets(FACETS_PATH))
         retriever = FacetRerankRetriever(fusion, facets_by_index)
     else:
         retriever = build_retriever(companies, args.method, model_key=args.model)
