@@ -392,13 +392,19 @@ exactly once across two near-identical queries. `api/ratelimit.py`'s
 `RateLimiter` tracks two in-memory sliding windows (per-IP per-hour,
 shared daily cap across all IPs) with an injectable clock, tested without
 real sleeps by advancing a fake `now()`. `api/app.py`'s `check_rate_limit`
-is the seam between the two — a pure function from `(limiter, ip)` to
-`None` or `DEMO_LIMIT_MESSAGE` — so the "degrade to a message, not an
-error" behavior the plan calls for is unit-tested directly, without
-booting the app or going through `TestClient` (which would otherwise force
-loading the real corpus/embeddings/API client just to check a 2-line
-policy). Both are process-local/in-memory, matching the single-container
-architecture — not meant to survive a restart or scale past one instance.
+is the seam between the two — it raises `HTTPException(429)` when over
+either window, so `/query` has exactly one response shape (the query
+result) instead of a 200 that's sometimes a result and sometimes an
+`{"error": ...}` payload wearing the same status code. "Degrade to a
+message, not an error" (the plan's phrasing) means a friendly, non-5xx
+response — a 429 with a `detail` string already is that; it doesn't mean
+disguising a rejection as a 200. Caught in a thermo-nuclear review before
+landing: the first version returned the message as a same-shaped dict,
+which is unit-tested directly either way (`pytest.raises(HTTPException)`
+now, vs. an equality check before) without booting the app or going
+through `TestClient`. Both cache and limiter are process-local/in-memory,
+matching the single-container architecture — not meant to survive a
+restart or scale past one instance.
 
 Not yet done: canned example ideas, the SPA, and Dockerfile — the rest of
 step 8/9.

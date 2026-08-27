@@ -1,4 +1,7 @@
-from api.app import DEMO_LIMIT_MESSAGE, check_rate_limit, handle_query
+import pytest
+from fastapi import HTTPException
+
+from api.app import check_rate_limit, handle_query
 from api.cache import QueryCache
 from api.ratelimit import RateLimiter
 
@@ -72,10 +75,13 @@ def test_handle_query_reuses_a_cached_result_without_calling_extract_again():
 
 def test_check_rate_limit_allows_under_the_cap():
     limiter = RateLimiter(per_ip_per_hour=1, daily_cap=100)
-    assert check_rate_limit(limiter, "1.2.3.4") is None
+    check_rate_limit(limiter, "1.2.3.4")  # no exception
 
 
-def test_check_rate_limit_degrades_to_the_demo_message_once_over_the_cap():
+def test_check_rate_limit_raises_429_once_over_the_cap():
     limiter = RateLimiter(per_ip_per_hour=1, daily_cap=100)
     check_rate_limit(limiter, "1.2.3.4")
-    assert check_rate_limit(limiter, "1.2.3.4") == DEMO_LIMIT_MESSAGE
+
+    with pytest.raises(HTTPException) as exc_info:
+        check_rate_limit(limiter, "1.2.3.4")
+    assert exc_info.value.status_code == 429

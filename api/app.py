@@ -10,7 +10,7 @@ and corpus facets once at process startup rather than per-request.
 import pathlib
 
 from anthropic import Anthropic
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from api.cache import QueryCache
@@ -27,7 +27,7 @@ FACETS_PATH = DATA_DIR / "facets.json"
 
 PER_IP_PER_HOUR = 20
 DAILY_CAP = 200
-DEMO_LIMIT_MESSAGE = {"error": "demo limit reached — please try again later"}
+DEMO_LIMIT_DETAIL = "demo limit reached — please try again later"
 
 
 class QueryRequest(BaseModel):
@@ -60,13 +60,13 @@ def handle_query(
     return result
 
 
-def check_rate_limit(limiter: RateLimiter, ip: str) -> dict | None:
-    """Returns the demo-limit-reached message if `ip` is over either window
-    (per-IP or the shared daily cap), else None.
+def check_rate_limit(limiter: RateLimiter, ip: str) -> None:
+    """Raises HTTPException(429) if `ip` is over either window (per-IP or the
+    shared daily cap) — the plan's "degrade to a message, not an error" means
+    a friendly, non-5xx response, not disguising a rejection as a 200.
     """
-    if limiter.allow(ip):
-        return None
-    return DEMO_LIMIT_MESSAGE
+    if not limiter.allow(ip):
+        raise HTTPException(status_code=429, detail=DEMO_LIMIT_DETAIL)
 
 
 def create_app() -> FastAPI:
@@ -84,9 +84,7 @@ def create_app() -> FastAPI:
     @app.post("/query")
     def query(request: QueryRequest, http_request: Request) -> dict:
         ip = http_request.client.host if http_request.client else "unknown"
-        limited = check_rate_limit(limiter, ip)
-        if limited is not None:
-            return limited
+        check_rate_limit(limiter, ip)
 
         return handle_query(
             request.idea_text,
