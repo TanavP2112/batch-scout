@@ -382,5 +382,23 @@ the live `/query` call itself is untested against the real API, still
 blocked by the same org usage quota (resets 2026-09-01 00:00 UTC) noted in
 steps 4 and 7. `fastapi`/`uvicorn` added to `requirements.txt`.
 
-Not yet done: rate limiting, the normalized-hash query cache, canned
-example ideas, the SPA, and Dockerfile — the rest of step 8/9.
+Rate limiting and the normalized-hash query cache are done. `api/cache.py`'s
+`QueryCache` keys on `normalize_query` (lowercase, collapsed whitespace) so
+"A Marketplace for Used Textbooks" and "a marketplace  for used textbooks"
+hit the same entry and skip both the Claude call and the ranking pass
+entirely — `api/app.py`'s `handle_query` checks it before extraction and
+populates it after, tested by asserting the fake `extract` is called
+exactly once across two near-identical queries. `api/ratelimit.py`'s
+`RateLimiter` tracks two in-memory sliding windows (per-IP per-hour,
+shared daily cap across all IPs) with an injectable clock, tested without
+real sleeps by advancing a fake `now()`. `api/app.py`'s `check_rate_limit`
+is the seam between the two — a pure function from `(limiter, ip)` to
+`None` or `DEMO_LIMIT_MESSAGE` — so the "degrade to a message, not an
+error" behavior the plan calls for is unit-tested directly, without
+booting the app or going through `TestClient` (which would otherwise force
+loading the real corpus/embeddings/API client just to check a 2-line
+policy). Both are process-local/in-memory, matching the single-container
+architecture — not meant to survive a restart or scale past one instance.
+
+Not yet done: canned example ideas, the SPA, and Dockerfile — the rest of
+step 8/9.

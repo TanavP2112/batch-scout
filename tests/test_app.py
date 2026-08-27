@@ -1,4 +1,6 @@
-from api.app import handle_query
+from api.app import DEMO_LIMIT_MESSAGE, check_rate_limit, handle_query
+from api.cache import QueryCache
+from api.ratelimit import RateLimiter
 
 
 class FakeRetriever:
@@ -41,3 +43,39 @@ def test_handle_query_extracts_idea_facets_then_builds_the_response():
     assert extracted == [("a marketplace for used textbooks", ["p"])]
     assert result["companies"][0]["company"]["id"] == 1
     assert result["companies"][0]["alignment"]["customer"]["same"] is True
+
+
+def test_handle_query_reuses_a_cached_result_without_calling_extract_again():
+    companies = [{"id": 1}]
+    corpus_facets_by_index = {0: facets()}
+    retriever = FakeRetriever(companies, order=[(0, 1.0)])
+    cache = QueryCache()
+    calls = []
+
+    def fake_extract(idea_text, problem_values):
+        calls.append(idea_text)
+        return facets()
+
+    kwargs = dict(
+        retriever=retriever,
+        corpus_facets_by_index=corpus_facets_by_index,
+        problem_values=["p"],
+        extract=fake_extract,
+        cache=cache,
+    )
+    first = handle_query("a marketplace for used textbooks", **kwargs)
+    second = handle_query("A Marketplace for Used Textbooks", **kwargs)
+
+    assert calls == ["a marketplace for used textbooks"]
+    assert second == first
+
+
+def test_check_rate_limit_allows_under_the_cap():
+    limiter = RateLimiter(per_ip_per_hour=1, daily_cap=100)
+    assert check_rate_limit(limiter, "1.2.3.4") is None
+
+
+def test_check_rate_limit_degrades_to_the_demo_message_once_over_the_cap():
+    limiter = RateLimiter(per_ip_per_hour=1, daily_cap=100)
+    check_rate_limit(limiter, "1.2.3.4")
+    assert check_rate_limit(limiter, "1.2.3.4") == DEMO_LIMIT_MESSAGE

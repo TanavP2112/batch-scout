@@ -10,18 +10,24 @@ and corpus facets once at process startup rather than per-request.
 import pathlib
 
 from anthropic import Anthropic
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
+from api.cache import QueryCache
 from api.corpus import load_corpus
 from api.extract_idea import extract_idea_facets
 from api.facets import facets_by_corpus_index, load_facets, validate_facets
 from api.fusion import build_retriever
 from api.query import build_query_result, enum_values_for
 from api.ranking import Retriever
+from api.ratelimit import RateLimiter
 
 DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 FACETS_PATH = DATA_DIR / "facets.json"
+
+PER_IP_PER_HOUR = 20
+DAILY_CAP = 200
+DEMO_LIMIT_MESSAGE = {"error": "demo limit reached — please try again later"}
 
 
 class QueryRequest(BaseModel):
@@ -34,13 +40,33 @@ def handle_query(
     corpus_facets_by_index: dict[int, dict],
     problem_values: list[str],
     extract=extract_idea_facets,
+    cache: QueryCache | None = None,
 ) -> dict:
     """Extracts the idea's facets, validates them, then delegates to the pure
-    ranking/alignment/whitespace core.
+    ranking/alignment/whitespace core. A hit on `cache` skips extraction and
+    ranking entirely — repeat pokes at the same idea cost nothing.
     """
+    if cache is not None:
+        cached = cache.get(idea_text)
+        if cached is not None:
+            return cached
+
     idea_facets = extract(idea_text, problem_values)
     validate_facets(idea_facets)
-    return build_query_result(idea_facets, retriever, idea_text, corpus_facets_by_index)
+    result = build_query_result(idea_facets, retriever, idea_text, corpus_facets_by_index)
+
+    if cache is not None:
+        cache.set(idea_text, result)
+    return result
+
+
+def check_rate_limit(limiter: RateLimiter, ip: str) -> dict | None:
+    """Returns the demo-limit-reached message if `ip` is over either window
+    (per-IP or the shared daily cap), else None.
+    """
+    if limiter.allow(ip):
+        return None
+    return DEMO_LIMIT_MESSAGE
 
 
 def create_app() -> FastAPI:
@@ -52,15 +78,23 @@ def create_app() -> FastAPI:
     corpus_facets_by_index = facets_by_corpus_index(companies, load_facets(FACETS_PATH))
     problem_values = enum_values_for("problem", corpus_facets_by_index)
     client = Anthropic()
+    cache = QueryCache()
+    limiter = RateLimiter(per_ip_per_hour=PER_IP_PER_HOUR, daily_cap=DAILY_CAP)
 
     @app.post("/query")
-    def query(request: QueryRequest) -> dict:
+    def query(request: QueryRequest, http_request: Request) -> dict:
+        ip = http_request.client.host if http_request.client else "unknown"
+        limited = check_rate_limit(limiter, ip)
+        if limited is not None:
+            return limited
+
         return handle_query(
             request.idea_text,
             retriever=retriever,
             corpus_facets_by_index=corpus_facets_by_index,
             problem_values=problem_values,
             extract=lambda idea_text, values: extract_idea_facets(idea_text, values, client=client),
+            cache=cache,
         )
 
     return app
