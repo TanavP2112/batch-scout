@@ -406,5 +406,23 @@ through `TestClient`. Both cache and limiter are process-local/in-memory,
 matching the single-container architecture — not meant to survive a
 restart or scale past one instance.
 
-Not yet done: canned example ideas, the SPA, and Dockerfile — the rest of
-step 8/9.
+Canned examples are done: `pipeline/build_canned_examples.py` picks 8
+diverse golden-set ideas (spanning fintech/healthcare/hardware/consumer,
+including `defi-onchain-analytics` — a zero-relevant-company idea, so the
+canned set itself demonstrates the whitespace/no-prior-art case, not just
+matches) and runs each through `build_query_result` fully offline —
+reusing `data/golden_set_facets.json`'s already-extracted facets, so
+building the canned set costs zero new API calls, matching the plan's
+"canned examples avoid even that [query-time] call" requirement. Output is
+committed to `data/canned_examples.json` (8 full precomputed results,
+~320KB). `api/app.py` loads it once at startup and serves it verbatim via
+`GET /examples` — no cache, no rate limit, no facet extraction on that
+path, since it's static data a reviewer can hit with no API key at all.
+
+Note the docstrings across `api/`, `eval/`, and `pipeline/` were stripped
+in a deliberate pass (pure documentation removal, verified 0 logic lines
+changed, 140→142 tests unaffected) — narration above written before that
+pass still describes the reasoning behind each piece; it just no longer
+lives in the code itself.
+
+Not yet done: the SPA and Dockerfile — the rest of step 8/9.

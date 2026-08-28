@@ -1,3 +1,4 @@
+import json
 import pathlib
 
 from anthropic import Anthropic
@@ -15,6 +16,7 @@ from api.ratelimit import RateLimiter
 
 DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 FACETS_PATH = DATA_DIR / "facets.json"
+CANNED_EXAMPLES_PATH = DATA_DIR / "canned_examples.json"
 
 PER_IP_PER_HOUR = 20
 DAILY_CAP = 200
@@ -71,6 +73,11 @@ def create_app() -> FastAPI:
     client = Anthropic()
     cache = QueryCache()
     limiter = RateLimiter(per_ip_per_hour=PER_IP_PER_HOUR, daily_cap=DAILY_CAP)
+    canned_examples = json.loads(CANNED_EXAMPLES_PATH.read_text())
+
+    @app.get("/examples")
+    def examples() -> list[dict]:
+        return canned_examples
 
     @app.post("/query")
     def query(request: QueryRequest, http_request: Request) -> dict:
