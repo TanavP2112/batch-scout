@@ -11,8 +11,6 @@ DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 def fetch() -> list[dict]:
     with urllib.request.urlopen(SOURCE_URL) as resp:
         return json.load(resp)
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
