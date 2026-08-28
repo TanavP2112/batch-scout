@@ -9,7 +9,6 @@ class RateLimiter:
     plus a `daily_cap` shared across every IP. Both windows must have room
     for a request to be allowed.
     """
-
     def __init__(self, per_ip_per_hour: int, daily_cap: int, now=time.time):
         self.per_ip_per_hour = per_ip_per_hour
         self.daily_cap = daily_cap
