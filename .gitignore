@@ -10,3 +10,4 @@ data/facets_batch_id.txt
 data/llm_judgments.json
 data/llm_judge_batch_id.txt
 data/golden_set_facets_batch_id.txt
+CLAUDE.md
