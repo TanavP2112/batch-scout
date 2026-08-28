@@ -1,14 +1,3 @@
-"""Regenerate the pinned YC snapshot.
-
-The live source (https://yc-oss.github.io/api) refreshes daily, so this
-project pins a dated snapshot instead of fetching live at query time — a
-study whose corpus shifts underneath it has no reproducible numbers.
-
-Usage:
-    python -m pipeline.refresh              # write data/yc-snapshot-<date>.json
-    python -m pipeline.refresh --dry-run     # fetch and validate only
-"""
-
 import argparse
 import datetime
 import json
