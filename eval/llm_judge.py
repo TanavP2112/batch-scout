@@ -1,20 +1,3 @@
-"""LLM-as-judge: Claude scores retrieved (idea, company) pairs for relevance.
-
-Coverage check per the plan: catches false negatives that eval.leave_one_out's
-weak subindustry labels and eval.golden_set's small hand-labeled set both
-miss, by judging every pair actually retrieved rather than relying on
-pre-existing labels. Not independent of the system under test — it favors
-fluent matches and would be circular if retrieval were ever tuned against
-it, so it's a coverage check, not a reporting metric.
-
-Batch submit/poll/watch lifecycle lives in api.anthropic_batch — this module
-supplies only the judging-specific request shape.
-
-Usage:
-    python -m eval.llm_judge submit    # judge eval.golden_set's fusion top-10 run
-    python -m eval.llm_judge poll [--watch] [batch_id]
-"""
-
 import argparse
 import json
 import pathlib
@@ -80,13 +63,6 @@ def build_judge_request(query_id: str, idea_text: str, company: dict) -> Request
 
 
 def build_judge_pairs(run: dict[str, dict[str, float]], depth: int = JUDGED_DEPTH) -> list[tuple[str, str]]:
-    """Returns (query_id, company_id) pairs to judge: each query's top `depth` retrieved companies.
-
-    Relies on eval.golden_set.build_run's ordering contract — its dict is
-    built directly from a Retriever's already rank-sorted output, and dicts
-    preserve insertion order, so `scored`'s iteration order already is rank
-    order. Re-sorting here would be redundant.
-    """
     pairs = []
     for query_id, scored in run.items():
         pairs.extend((query_id, company_id) for company_id in list(scored)[:depth])
@@ -94,9 +70,6 @@ def build_judge_pairs(run: dict[str, dict[str, float]], depth: int = JUDGED_DEPT
 
 
 def coverage_report(judgments: dict[str, dict], qrels: dict[str, dict[str, int]]) -> dict[str, dict]:
-    """Per query: judged-relevant count, and judged-relevant pairs absent from qrels
-    (candidate false negatives — the whole point of running a judge alongside weak labels).
-    """
     report: dict[str, dict] = {}
     for custom_id, judgment in judgments.items():
         query_id, company_id = custom_id.split("::", 1)

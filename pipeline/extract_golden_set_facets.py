@@ -1,17 +1,3 @@
-"""One-off: extract facets for eval.golden_set's 30 hand-labeled ideas.
-
-Uses the corpus's already-derived `problem` enum (from data/facets.json)
-instead of free text, so idea-side and corpus-side `problem` values are
-directly comparable by value equality — needed for the golden-set
-facet-rerank ablation row (see CLAUDE.md build-order step 6). A small
-one-off batch (30 requests), not part of the regular corpus pipeline —
-batch submit/poll/watch lives in api.anthropic_batch as usual.
-
-Usage:
-    python -m pipeline.extract_golden_set_facets submit
-    python -m pipeline.extract_golden_set_facets poll [--watch] [batch_id]
-"""
-
 import argparse
 import json
 import pathlib

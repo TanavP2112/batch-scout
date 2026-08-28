@@ -1,9 +1,3 @@
-"""Loads the pinned YC snapshot into the shape retrieval needs.
-
-A company with neither a long_description nor a one_liner has nothing to
-embed and is dropped — 57 of 6,189 in the current snapshot.
-"""
-
 import json
 import pathlib
 

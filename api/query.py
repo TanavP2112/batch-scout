@@ -1,12 +1,3 @@
-"""Assembles a query response: rank, facet-rerank, then attach an alignment
-grid to each displayed company and compute whitespace across the cohort.
-
-Pure over its inputs — no corpus loading, no live extraction call, no
-FastAPI. Those are the thin I/O wrappers (api/app.py's query-time extraction,
-api/corpus.py's load_corpus) that call this. See CONTEXT.md: alignment is
-per-company, whitespace is per-cohort, neither is ever a scalar.
-"""
-
 from api.alignment import build_alignment_grid
 from api.facets import FACET_ENUMS, FACET_NAMES, distinct_facet_values
 from api.ranking import Retriever

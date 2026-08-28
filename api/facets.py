@@ -1,15 +1,3 @@
-"""Idea facet schema: the five bilateral facets shared by ideas and companies.
-
-Each facet pairs a controlled enum (deterministic alignment-grid comparison,
-whitespace counting) with a free-text span (readable UI). See CONTEXT.md for
-the idea-facet / cohort-signal distinction.
-
-`problem` has no hand-authored enum — its values are derived bottom-up by
-clustering free-text spans (pipeline/cluster_problems.py) rather than
-guessed upfront, per the plan's rationale that a hand-authored taxonomy is
-wrong in ways that surface too late.
-"""
-
 import json
 import pathlib
 
@@ -81,16 +69,6 @@ def _facet_property(enum_values: list[str] | None) -> dict:
 
 
 def extraction_schema(problem_enum: list[str] | None = None) -> dict:
-    """JSON schema for one company/idea's facet extraction (output_config.format).
-
-    `problem.value` has no enum by default — for the initial corpus pass,
-    it's free text that seeds pipeline.cluster_problems's bottom-up
-    clustering. Once that clustering has produced a corpus-wide `problem`
-    enum, pass it as `problem_enum` when extracting facets for anything
-    that needs to be *compared* against the corpus (e.g. a golden-set idea
-    for facet-aware rerank) — otherwise the idea gets a fresh free-text
-    label that can never match any corpus company's `problem` value.
-    """
     return {
         "type": "object",
         "properties": {
@@ -103,12 +81,6 @@ def extraction_schema(problem_enum: list[str] | None = None) -> dict:
 
 
 def validate_facets(facets: dict) -> None:
-    """Raises ValueError if `facets` doesn't match the extraction contract.
-
-    Structured outputs already enforce enum membership at generation time;
-    this is for validating facets loaded back from disk (e.g. after the
-    clustering merge rewrites `problem`), where that guarantee no longer holds.
-    """
     missing = [name for name in FACET_NAMES if name not in facets]
     if missing:
         raise ValueError(f"missing facets: {missing}")
@@ -125,19 +97,8 @@ def load_facets(path: pathlib.Path | str) -> dict[str, dict]:
 
 
 def distinct_facet_values(facet_name: str, facets_by_id: dict[str, dict]) -> list[str]:
-    """Every distinct value a facet takes across a facets.json-shaped dict, sorted.
-
-    The single source of truth for a corpus-derived enum universe (e.g.
-    `problem`, which has no hand-authored enum) — anything that needs to
-    compare a facet's value against "every value seen in the corpus" should
-    call this rather than re-deriving it, so idea-side and corpus-side
-    derivations of the same enum can never drift apart.
-    """
     return sorted({entry[facet_name]["value"] for entry in facets_by_id.values()})
 
 
 def facets_by_corpus_index(companies: list[dict], facets_by_id: dict[str, dict]) -> dict[int, dict]:
-    """Remaps a facets.json-shaped dict (keyed by company id) to corpus index,
-    matching the (index, score) pairs a Retriever.rank returns.
-    """
     return {i: facets_by_id[str(c["id"])] for i, c in enumerate(companies)}

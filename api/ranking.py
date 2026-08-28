@@ -1,11 +1,3 @@
-"""Shared ranking contract and scoring helper for all retrievers.
-
-Every retriever (dense, lexical, fusion) reduces to "score every corpus
-index, then sort" — this module holds that one shared step plus the
-`Retriever` protocol so callers (FusionRetriever, the eval harness) can
-depend on the contract instead of a growing union of concrete classes.
-"""
-
 from typing import Protocol
 
 import numpy as np

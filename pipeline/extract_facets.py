@@ -1,19 +1,3 @@
-"""Offline facet extraction: classify every company into the five idea facets.
-
-Runs once via the Message Batches API (50% off) against the pinned snapshot.
-`problem` comes back as a free-text label only — pipeline.cluster_problems
-turns those labels into the bottom-up `problem` enum and produces the
-committed data/facets.json. This script's own output is the intermediate
-data/facets_raw.json.
-
-Batch submit/poll/watch lifecycle lives in api.anthropic_batch — this module
-supplies only the extraction-specific request shape.
-
-Usage:
-    python -m pipeline.extract_facets submit [--n N]    # create and submit a batch
-    python -m pipeline.extract_facets poll [--watch] [batch_id]    # check status; write results once done
-"""
-
 import argparse
 import json
 import pathlib

@@ -1,13 +1,3 @@
-"""Anthropic Message Batches job lifecycle: submit, poll (optionally watching
-until it ends), parse each result, split into (results, errors).
-
-Both pipeline.extract_facets and eval.llm_judge run a batch of structured-
-output requests and read back one JSON object per request — this module
-owns everything about *that* shape. Callers supply only what varies: how to
-build one request per item (their own business), and where the batch id /
-output get cached on disk.
-"""
-
 import json
 import pathlib
 import time
@@ -51,9 +41,6 @@ def poll_delays(interval: float = 30):
 
 
 def watch_until_ended(retrieve_status, sleep=time.sleep, delays=None):
-    """Calls `retrieve_status()` until it reports `processing_status == "ended"`,
-    waiting between checks per `delays` (defaults to `poll_delays()`).
-    """
     delays = delays if delays is not None else poll_delays()
     status = retrieve_status()
     while status.processing_status != "ended":

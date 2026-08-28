@@ -1,13 +1,3 @@
-"""Dense retrieval: embed the corpus once, rank by cosine similarity.
-
-Embeddings are open-weights and run locally (sentence-transformers) — no
-embedding API, no key. Cached to disk under data/embeddings/ since encoding
-6,189 companies is a one-time cost that should never repeat at query time.
-
-See api/lexical.py for the BM25 counterpart and api/fusion.py for the RRF
-combination of the two.
-"""
-
 import pathlib
 
 import numpy as np

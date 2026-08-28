@@ -1,13 +1,3 @@
-"""Query-time facet extraction: classify one live-typed idea into the five
-facets with a single synchronous Message call (not the Batches API — a
-founder typing an idea can't wait for batch turnaround).
-
-Reuses pipeline.extract_facets's model/system prompt and api.facets's
-schema builder, passing the corpus's own `problem` enum so a live idea's
-`problem` value is directly comparable to a company's — same reason
-pipeline/extract_golden_set_facets.py does it for the golden set.
-"""
-
 import json
 
 from anthropic import Anthropic

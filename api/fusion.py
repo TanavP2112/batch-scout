@@ -1,11 +1,3 @@
-"""Reciprocal Rank Fusion of dense and lexical retrieval.
-
-RRF combines two rankings by rank position rather than raw score, which
-sidesteps the fact that BM25 scores and cosine similarities live on
-incomparable scales. score(doc) = sum over rankers of 1 / (k + rank), with
-the standard k=60 (Cormack et al., 2009).
-"""
-
 from api.lexical import LexicalRetriever
 from api.ranking import Retriever
 from api.retrieval import DenseRetriever
@@ -15,12 +7,6 @@ METHODS = ("dense", "lexical", "fusion")
 
 
 class FusionRetriever:
-    """Ranks a corpus by RRF-fused dense + lexical rank.
-
-    Callers must construct `dense` and `lexical` over the same companies
-    list (in the same order) — fusion assumes their corpus indices align.
-    """
-
     def __init__(self, dense: Retriever, lexical: Retriever, k: int = RRF_K):
         self.companies = dense.companies
         self.dense = dense
@@ -43,11 +29,6 @@ class FusionRetriever:
 
 
 def build_retriever(companies: list[dict], method: str, model_key: str = "bge-small") -> Retriever:
-    """Builds a Retriever over `companies` by `method` ("dense", "lexical", "fusion").
-
-    Owns the shared-companies invariant FusionRetriever's docstring warns
-    about — dense and lexical are always constructed from the same list.
-    """
     if method == "lexical":
         return LexicalRetriever(companies)
     if method == "dense":

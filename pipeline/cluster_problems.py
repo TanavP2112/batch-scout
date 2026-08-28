@@ -1,18 +1,3 @@
-"""Bottom-up clustering of the `problem` facet.
-
-pipeline.extract_facets produces a free-text `problem` label per company but
-no enum — a hand-authored problem taxonomy is wrong in ways that surface too
-late (see the plan). Instead: embed every label, cluster them, and name each
-cluster after its medoid — the member span closest to the cluster's
-embedding centroid, computed locally with no API call. Every cluster name
-is therefore a real observed span, not a generated one. This script merges
-the resulting `problem` enum back into the raw per-facet extractions to
-produce the committed data/facets.json.
-
-Usage:
-    python -m pipeline.cluster_problems [--k 40]
-"""
-
 import argparse
 import json
 import pathlib

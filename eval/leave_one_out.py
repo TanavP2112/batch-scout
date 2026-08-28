@@ -1,19 +1,3 @@
-"""Leave-one-out retrieval eval: the development metric (see plan's Q6 tradeoffs).
-
-Hide a YC company, query with its own description, and check whether its
-weak-label peers (other companies in the same `subindustry`) come back.
-Free — thousands of labeled queries with zero hand-labeling — but the
-weak labels are noisy and the query text is YC's own polished copy rather
-than a founder's messy paragraph. This is the harness used for every
-ablation; it is not the number quoted in the README (that's the hand-labeled
-golden set, a later build-order step).
-
-Usage:
-    python -m eval.leave_one_out                       # 300 sampled queries, bge-small
-    python -m eval.leave_one_out --n 1000 --model bge-large
-    python -m eval.leave_one_out --full                 # every company as a query
-"""
-
 import argparse
 import pathlib
 import random

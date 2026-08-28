@@ -1,10 +1,3 @@
-"""IP rate limit + hard daily cap for the query-time path.
-
-Per the plan: degrades to a "demo limit reached" message rather than an
-error — api.app is responsible for turning `allow() is False` into that
-message; this module only tracks the two windows.
-"""
-
 import time
 
 HOUR_SECONDS = 3600

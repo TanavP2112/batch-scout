@@ -1,19 +1,3 @@
-"""Golden-set retrieval eval: hand-labeled founder-voice ideas.
-
-The reporting metric quoted in the README (unlike eval.leave_one_out, the
-development metric used for ablations) — see the plan's Q6 tradeoff table.
-Small (30 ideas, wide confidence intervals) and single-labeler, and query
-text is deliberately messy founder-voice paragraphs rather than YC's own
-polished marketing copy, closing the distribution-mismatch gap
-leave-one-out has. An idea with zero labeled `relevant_company_ids` is a
-legitimate label — it means this corpus has no real prior art for that idea,
-not a labeling gap.
-
-Usage:
-    python -m eval.golden_set                       # 30 ideas, bge-small
-    python -m eval.golden_set --method fusion
-"""
-
 import argparse
 import json
 import pathlib

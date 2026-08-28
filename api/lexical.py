@@ -1,11 +1,3 @@
-"""Lexical retrieval: BM25 over company text, no embeddings involved.
-
-Complements DenseRetriever for RRF fusion (api/fusion.py). Tokenization is
-deliberately simple (lowercase + word-boundary split) — BM25's job here is to
-catch sharp keyword/name overlaps that dense embeddings can blur past, not to
-be a state-of-the-art lexical ranker.
-"""
-
 import re
 
 import numpy as np

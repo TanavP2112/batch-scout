@@ -1,12 +1,3 @@
-"""FastAPI layer: the query-time path (build-order step 8).
-
-Thin wrapper — all the real logic (ranking, facet-rerank, alignment,
-whitespace) lives in api.query.build_query_result, which is pure and
-already unit-tested. This module's only job is: extract the live idea's
-facets, validate them, hand off to that pure core, and load the retriever
-and corpus facets once at process startup rather than per-request.
-"""
-
 import pathlib
 
 from anthropic import Anthropic
