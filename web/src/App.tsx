@@ -4,7 +4,6 @@ import type { CannedExample, QueryResult } from './types'
 import { IdeaForm } from './components/IdeaForm'
 import { ExamplePicker } from './components/ExamplePicker'
 import { ResultsView } from './components/ResultsView'
-import './App.css'
 
 export default function App() {
   const [examples, setExamples] = useState<CannedExample[]>([])
@@ -40,18 +39,21 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Prior-Art Engine</h1>
-        <p>Type a startup idea to see the closest YC companies, what's the same, what's different, and what's unoccupied.</p>
+    <div className="px-6 pb-16 text-left">
+      <header>
+        <h1 className="mt-8 mb-2 text-4xl font-medium tracking-[-0.9px] text-(--text-h)">Prior-Art Engine</h1>
+        <p className="max-w-[60ch] text-(--text)">
+          Type a startup idea to see the closest YC companies, what's the same, what's different, and what's
+          unoccupied.
+        </p>
       </header>
 
       <IdeaForm onSubmit={runQuery} disabled={loading} />
       {examples.length > 0 && <ExamplePicker examples={examples} onSelect={selectExample} />}
 
-      {error && <p className="error">{error}</p>}
-      {ideaText && !loading && <p className="idea-echo">“{ideaText}”</p>}
-      {loading && <p className="loading">Searching…</p>}
+      {error && <p className="mt-4 text-[#c0392b]">{error}</p>}
+      {ideaText && !loading && <p className="mt-6 italic text-(--text)">“{ideaText}”</p>}
+      {loading && <p className="mt-4 text-(--text)">Searching…</p>}
       {result && <ResultsView result={result} />}
     </div>
   )

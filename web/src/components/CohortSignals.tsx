@@ -21,7 +21,7 @@ export function CohortSignals({ companies }: { companies: Company[] }) {
   const teamSizes = companies.map((c) => c.team_size).filter((n) => typeof n === 'number' && n > 0)
 
   return (
-    <section className="cohort-signals">
+    <section className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-(--text)">
       <span>{companies.length} companies</span>
       {Object.entries(statusCounts).map(([status, count]) => (
         <span key={status}>
