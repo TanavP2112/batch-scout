@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from api.anthropic_batch import poll_and_collect as _poll_and_collect
 from api.anthropic_batch import submit_batch
 from api.corpus import company_text, load_corpus
-from api.facets import extraction_schema
+from api.facets import build_facet_extraction_params
 
 load_dotenv()
 
@@ -18,31 +18,12 @@ DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 RAW_FACETS_PATH = DATA_DIR / "facets_raw.json"
 BATCH_ID_PATH = DATA_DIR / "facets_batch_id.txt"
 
-MODEL = "claude-opus-5"
-
-SYSTEM_PROMPT = """You are classifying a startup into five facets, used to compare it against other startups.
-
-- customer: who the primary buyer/user is.
-- problem: the core problem being solved, as a short (3-6 word) normalized label — this will later be clustered against thousands of other companies' labels, so phrase it as a generic problem category (e.g. "expense report automation", not "helping accountants at mid-size firms file expenses faster").
-- mechanism: how the product is delivered/works.
-- wedge: what makes this startup's entry angle work — why now, why them.
-- business_model: how the company makes money.
-
-For each facet, also return a short (<=12 word) free-text span quoting or closely paraphrasing the source text that supports the classification. Base every judgment only on the given text — do not invent facts."""
-
 
 def build_request(company: dict) -> Request:
     text = f"{company['name']}: {company_text(company)}"
     return Request(
         custom_id=str(company["id"]),
-        params=MessageCreateParamsNonStreaming(
-            model=MODEL,
-            max_tokens=2048,
-            thinking={"type": "adaptive"},
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-            messages=[{"role": "user", "content": text}],
-            output_config={"format": {"type": "json_schema", "schema": extraction_schema()}},
-        ),
+        params=MessageCreateParamsNonStreaming(**build_facet_extraction_params(text)),
     )
 
 

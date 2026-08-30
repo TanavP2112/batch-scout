@@ -4,6 +4,8 @@ import pytest
 
 from api.facets import (
     FACET_NAMES,
+    MODEL,
+    build_facet_extraction_params,
     distinct_facet_values,
     extraction_schema,
     facets_by_corpus_index,
@@ -108,3 +110,22 @@ def test_facets_by_corpus_index_remaps_by_company_id():
         0: {"customer": {"value": "SMB", "span": "s"}},
         1: {"customer": {"value": "enterprise", "span": "s"}},
     }
+
+
+def test_build_facet_extraction_params_embeds_text_and_model():
+    params = build_facet_extraction_params("a marketplace for used textbooks")
+
+    assert params["model"] == MODEL
+    assert params["messages"] == [{"role": "user", "content": "a marketplace for used textbooks"}]
+
+
+def test_build_facet_extraction_params_uses_free_text_problem_by_default():
+    params = build_facet_extraction_params("some idea")
+    value_schema = params["output_config"]["format"]["schema"]["properties"]["problem"]["properties"]["value"]
+    assert "enum" not in value_schema
+
+
+def test_build_facet_extraction_params_uses_given_problem_enum():
+    params = build_facet_extraction_params("some idea", problem_enum=["book-resale"])
+    value_schema = params["output_config"]["format"]["schema"]["properties"]["problem"]["properties"]["value"]
+    assert value_schema["enum"] == ["book-resale"]

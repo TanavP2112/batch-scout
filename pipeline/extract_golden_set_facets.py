@@ -9,9 +9,8 @@ from dotenv import load_dotenv
 
 from api.anthropic_batch import poll_and_collect as _poll_and_collect
 from api.anthropic_batch import submit_batch
-from api.facets import distinct_facet_values, extraction_schema, load_facets
+from api.facets import build_facet_extraction_params, distinct_facet_values, load_facets
 from eval.golden_set import load_golden_set
-from pipeline.extract_facets import MODEL, SYSTEM_PROMPT
 
 load_dotenv()
 
@@ -30,14 +29,7 @@ def build_idea_request(entry: dict, problem_values: list[str]) -> Request:
     return Request(
         custom_id=entry["id"],
         params=MessageCreateParamsNonStreaming(
-            model=MODEL,
-            max_tokens=2048,
-            thinking={"type": "adaptive"},
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-            messages=[{"role": "user", "content": entry["idea_text"]}],
-            output_config={
-                "format": {"type": "json_schema", "schema": extraction_schema(problem_enum=problem_values)}
-            },
+            **build_facet_extraction_params(entry["idea_text"], problem_enum=problem_values)
         ),
     )
 

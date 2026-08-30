@@ -1,6 +1,18 @@
 import json
 import pathlib
 
+MODEL = "claude-opus-5"
+
+SYSTEM_PROMPT = """You are classifying a startup into five facets, used to compare it against other startups.
+
+- customer: who the primary buyer/user is.
+- problem: the core problem being solved, as a short (3-6 word) normalized label — this will later be clustered against thousands of other companies' labels, so phrase it as a generic problem category (e.g. "expense report automation", not "helping accountants at mid-size firms file expenses faster").
+- mechanism: how the product is delivered/works.
+- wedge: what makes this startup's entry angle work — why now, why them.
+- business_model: how the company makes money.
+
+For each facet, also return a short (<=12 word) free-text span quoting or closely paraphrasing the source text that supports the classification. Base every judgment only on the given text — do not invent facts."""
+
 CUSTOMER = [
     "consumer",
     "prosumer",
@@ -77,6 +89,24 @@ def extraction_schema(problem_enum: list[str] | None = None) -> dict:
         },
         "required": FACET_NAMES,
         "additionalProperties": False,
+    }
+
+
+def build_facet_extraction_params(text: str, problem_enum: list[str] | None = None) -> dict:
+    """The shared Claude request shape for classifying one text into the five
+    facets — used identically for corpus companies, golden-set ideas, and a
+    live typed idea, so the same classifier decides every side of every
+    alignment-grid comparison. Pass `problem_enum` (the corpus-derived
+    enum) when the result needs to be comparable to already-extracted
+    facets; omit it for the initial corpus pass, before that enum exists.
+    """
+    return {
+        "model": MODEL,
+        "max_tokens": 2048,
+        "thinking": {"type": "adaptive"},
+        "system": [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+        "messages": [{"role": "user", "content": text}],
+        "output_config": {"format": {"type": "json_schema", "schema": extraction_schema(problem_enum)}},
     }
 
 

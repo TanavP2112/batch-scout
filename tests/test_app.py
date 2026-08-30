@@ -1,5 +1,7 @@
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.testclient import TestClient
 
 from api.app import check_rate_limit, handle_query
 from api.cache import QueryCache
@@ -85,3 +87,49 @@ def test_check_rate_limit_raises_429_once_over_the_cap():
     with pytest.raises(HTTPException) as exc_info:
         check_rate_limit(limiter, "1.2.3.4")
     assert exc_info.value.status_code == 429
+
+
+def _app_with_spa_mount(dist_dir):
+    """Mirrors create_app's route-then-mount order: explicit API routes
+    registered first, StaticFiles mounted at "/" last, so the mount (which
+    would otherwise match every path) can't shadow the API routes.
+    """
+    app = FastAPI()
+
+    @app.get("/examples")
+    def examples() -> list[dict]:
+        return [{"id": "x"}]
+
+    app.mount("/", StaticFiles(directory=dist_dir, html=True), name="spa")
+    return app
+
+
+def test_spa_mount_does_not_shadow_an_api_route_registered_before_it(tmp_path):
+    (tmp_path / "index.html").write_text("<title>Prior-Art Engine</title>")
+
+    client = TestClient(_app_with_spa_mount(tmp_path))
+
+    assert client.get("/examples").json() == [{"id": "x"}]
+
+
+def test_spa_mount_serves_index_html_at_root(tmp_path):
+    (tmp_path / "index.html").write_text("<title>Prior-Art Engine</title>")
+
+    client = TestClient(_app_with_spa_mount(tmp_path))
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert "Prior-Art Engine" in response.text
+
+
+def test_spa_mount_serves_a_static_asset_by_exact_path(tmp_path):
+    (tmp_path / "index.html").write_text("<title>Prior-Art Engine</title>")
+    assets_dir = tmp_path / "assets"
+    assets_dir.mkdir()
+    (assets_dir / "index-abc123.js").write_text("console.log('hi')")
+
+    client = TestClient(_app_with_spa_mount(tmp_path))
+    response = client.get("/assets/index-abc123.js")
+
+    assert response.status_code == 200
+    assert "console.log" in response.text

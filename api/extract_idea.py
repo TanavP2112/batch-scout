@@ -2,19 +2,7 @@ import json
 
 from anthropic import Anthropic
 
-from api.facets import extraction_schema
-from pipeline.extract_facets import MODEL, SYSTEM_PROMPT
-
-
-def build_idea_request_kwargs(idea_text: str, problem_values: list[str]) -> dict:
-    return {
-        "model": MODEL,
-        "max_tokens": 2048,
-        "thinking": {"type": "adaptive"},
-        "system": [{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-        "messages": [{"role": "user", "content": idea_text}],
-        "output_config": {"format": {"type": "json_schema", "schema": extraction_schema(problem_enum=problem_values)}},
-    }
+from api.facets import build_facet_extraction_params
 
 
 def parse_idea_facets_message(message) -> dict:
@@ -31,5 +19,5 @@ def parse_idea_facets_message(message) -> dict:
 
 def extract_idea_facets(idea_text: str, problem_values: list[str], client: Anthropic | None = None) -> dict:
     client = client or Anthropic()
-    message = client.messages.create(**build_idea_request_kwargs(idea_text, problem_values))
+    message = client.messages.create(**build_facet_extraction_params(idea_text, problem_enum=problem_values))
     return parse_idea_facets_message(message)

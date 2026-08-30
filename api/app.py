@@ -3,6 +3,7 @@ import pathlib
 
 from anthropic import Anthropic
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from api.cache import QueryCache
@@ -17,6 +18,7 @@ from api.ratelimit import RateLimiter
 DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 FACETS_PATH = DATA_DIR / "facets.json"
 CANNED_EXAMPLES_PATH = DATA_DIR / "canned_examples.json"
+WEB_DIST_DIR = pathlib.Path(__file__).resolve().parent.parent / "web" / "dist"
 
 PER_IP_PER_HOUR = 20
 DAILY_CAP = 200
@@ -54,10 +56,6 @@ def handle_query(
 
 
 def check_rate_limit(limiter: RateLimiter, ip: str) -> None:
-    """Raises HTTPException(429) if `ip` is over either window (per-IP or the
-    shared daily cap) — the plan's "degrade to a message, not an error" means
-    a friendly, non-5xx response, not disguising a rejection as a 200.
-    """
     if not limiter.allow(ip):
         raise HTTPException(status_code=429, detail=DEMO_LIMIT_DETAIL)
 
@@ -92,6 +90,15 @@ def create_app() -> FastAPI:
             extract=lambda idea_text, values: extract_idea_facets(idea_text, values, client=client),
             cache=cache,
         )
+
+    # Serves the pre-built SPA (web/dist) on the same origin as /query and
+    # /examples — the "one Dockerfile, one URL, no CORS" architecture only
+    # holds if this process also serves the frontend, not just the API.
+    # Mounted last: /query and /examples above already matched by then, so
+    # this catch-all can't shadow them. Guarded by existence so `create_app`
+    # still boots for API-only local dev without a `web/dist` build.
+    if WEB_DIST_DIR.exists():
+        app.mount("/", StaticFiles(directory=WEB_DIST_DIR, html=True), name="spa")
 
     return app
 
