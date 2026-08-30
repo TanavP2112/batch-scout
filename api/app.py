@@ -90,13 +90,6 @@ def create_app() -> FastAPI:
             extract=lambda idea_text, values: extract_idea_facets(idea_text, values, client=client),
             cache=cache,
         )
-
-    # Serves the pre-built SPA (web/dist) on the same origin as /query and
-    # /examples — the "one Dockerfile, one URL, no CORS" architecture only
-    # holds if this process also serves the frontend, not just the API.
-    # Mounted last: /query and /examples above already matched by then, so
-    # this catch-all can't shadow them. Guarded by existence so `create_app`
-    # still boots for API-only local dev without a `web/dist` build.
     if WEB_DIST_DIR.exists():
         app.mount("/", StaticFiles(directory=WEB_DIST_DIR, html=True), name="spa")
 

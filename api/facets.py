@@ -93,13 +93,6 @@ def extraction_schema(problem_enum: list[str] | None = None) -> dict:
 
 
 def build_facet_extraction_params(text: str, problem_enum: list[str] | None = None) -> dict:
-    """The shared Claude request shape for classifying one text into the five
-    facets — used identically for corpus companies, golden-set ideas, and a
-    live typed idea, so the same classifier decides every side of every
-    alignment-grid comparison. Pass `problem_enum` (the corpus-derived
-    enum) when the result needs to be comparable to already-extracted
-    facets; omit it for the initial corpus pass, before that enum exists.
-    """
     return {
         "model": MODEL,
         "max_tokens": 2048,
